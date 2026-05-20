@@ -1,0 +1,145 @@
+// Phillips Brand — Pass 3 overlay for stock SharePoint web parts.
+//
+// All rules below override SharePoint's own stylesheets, which use higher-
+// specificity selectors loaded later in the cascade. The blanket `!important`
+// on every declaration is intentional and load-bearing — without it, the
+// stock SharePoint rules win and the brand styling has no visible effect.
+// Per CLAUDE.md, `!important` is acceptable when "there's no other option"
+// and the reason is documented; this file is the documented place where the
+// pattern is allowed for OOTB-web-part overrides.
+
+@use './tokens' as *;
+
+// ---------- Section / web part titles ----------
+// SharePoint default: thin Segoe UI title, no underline. Overridden to the
+// Phillips display face with a red baseline.
+[data-automation-id="webPartHeader"],
+[data-automation-id="webPartTitleReadMode"],
+[data-automation-id="captionElement"] {
+  font-family: var(--phil-font-display) !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  color: var(--phil-black) !important;
+  padding-bottom: var(--phil-space-2) !important;
+  border-bottom: 3px solid var(--phil-red) !important;
+  margin-bottom: var(--phil-space-4) !important;
+  display: inline-block !important;
+}
+
+// ---------- Quick Links: pill-shaped tiles, Phillips red ----------
+// SharePoint default: white rectangular ButtonCard with subtle border.
+// Brand override: full-pill red tile, white text + icons, hover darkens.
+.ButtonCard,
+a.ButtonCard {
+  border-radius: var(--phil-radius-pill) !important;
+  background-color: var(--phil-red) !important;
+  border: none !important;
+  // Decorative shadow tints — not promoted to tokens since they're
+  // hover/elevation effects rather than brand values.
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
+  overflow: hidden !important;
+}
+
+.ButtonCard:hover,
+a.ButtonCard:hover {
+  background-color: var(--phil-black) !important;
+  transform: translateY(-1px) !important;
+  // Shadow color is `--phil-red` at 25% alpha (#F9423A → rgba(249,66,58,0.25)).
+  // Kept inline; promote to a token if the same alpha mix appears elsewhere.
+  box-shadow: 0 4px 12px rgba(249, 66, 58, 0.25) !important;
+}
+
+.ButtonCard [data-automation-id="button-card"],
+.ButtonCard [class*="textArea"] {
+  color: var(--phil-white) !important;
+}
+
+.ButtonCard [class*="textArea"] *,
+.ButtonCard [data-automation-id="quick-links-item-title"],
+.ButtonCard [class*="textArea"] span {
+  font-family: var(--phil-font-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  color: var(--phil-white) !important;
+}
+
+.ButtonCard [class*="thumbnail"] svg,
+.ButtonCard [class*="thumbnail"] i,
+.ButtonCard [class*="thumbnail"] * {
+  color: var(--phil-white) !important;
+  fill: var(--phil-white) !important;
+}
+
+// ---------- Hero: "Learn more" CTA ----------
+// SharePoint default: themed primary button with default radius.
+// Brand override: compact red rectangle, uppercase display face, dark on hover.
+[data-automation-id="hero-calltoaction"],
+[data-automation-id="hero-calltoaction"] a,
+[data-automation-id="hero-calltoaction"] button {
+  background-color: var(--phil-red) !important;
+  color: var(--phil-white) !important;
+  font-family: var(--phil-font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  // 2px is tighter than the smallest scale step (--phil-radius-sm = 4px).
+  // Kept raw for the CTA-specific look; promote to a token if reused.
+  border-radius: 2px !important;
+  // 10px and 24px sit between scale steps; kept raw to preserve CTA
+  // proportions (10px vertical for compactness, 24px horizontal for hit area).
+  padding: 10px 24px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+[data-automation-id="hero-calltoaction"]:hover,
+[data-automation-id="hero-calltoaction"] a:hover,
+[data-automation-id="hero-calltoaction"] button:hover {
+  background-color: var(--phil-black) !important;
+}
+
+[data-automation-id="hero-imageandheading"] h2,
+[data-automation-id="hero-imageandheading"] h3,
+[data-automation-id="hero-imageandheading-overlay"] h2,
+[data-automation-id="hero-imageandheading-overlay"] h3 {
+  font-family: var(--phil-font-display) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
+// ---------- News web part ----------
+// SharePoint default: Segoe UI titles + descriptions in flat gray.
+// Brand override: display face on titles with red hover, body face on
+// descriptions in mid gray.
+[data-automation-id="newsItemTitle"] {
+  font-family: var(--phil-font-display) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.01em !important;
+  color: var(--phil-black) !important;
+}
+
+[data-automation-id="newsItemTitle"]:hover {
+  color: var(--phil-red) !important;
+}
+
+[data-automation-id="newsItemDescription"] {
+  font-family: var(--phil-font-body) !important;
+  color: var(--phil-gray-600) !important;
+}
+
+// ---------- Global body font ----------
+// SharePoint defaults `<body>` and the Fluent .ms-font-* utilities to Segoe UI.
+// Override to the Phillips body face so non-web-part chrome (headers,
+// navigation, breadcrumbs) picks up the brand typeface too.
+body,
+.ms-font-m,
+.ms-font-s,
+.ms-font-l {
+  font-family: var(--phil-font-body) !important;
+}
