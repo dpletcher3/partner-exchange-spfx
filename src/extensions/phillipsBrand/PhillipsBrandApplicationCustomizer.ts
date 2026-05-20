@@ -1,18 +1,22 @@
 import { BaseApplicationCustomizer } from '@microsoft/sp-application-base';
 
-// The customizer takes no configurable properties — its job is to inject the
-// Phillips brand CSS into every page. Using Record<string, never> instead of
-// an empty interface keeps ESLint quiet about no-empty-interface.
+// Side-effect import: pulls the compiled Phillips brand CSS into the
+// extension bundle. sp-css-loader auto-injects it into <head> at runtime
+// and tracks the module so re-navigations across pages on the same SPA
+// session don't duplicate the <style> tag. The `.global.scss` extension
+// tells heft-sass-plugin to treat this as non-module CSS (no class hashing).
+import '../../styles/index.global.scss';
+
+// The customizer takes no configurable properties — its only job is to make
+// the side-effect import above happen on every page where the customizer
+// is registered. Record<string, never> keeps ESLint quiet about empty
+// interfaces while still satisfying BaseApplicationCustomizer's generic.
 type IPhillipsBrandApplicationCustomizerProperties = Record<string, never>;
 
 export default class PhillipsBrandApplicationCustomizer
   extends BaseApplicationCustomizer<IPhillipsBrandApplicationCustomizerProperties> {
 
   public onInit(): Promise<void> {
-    // Prompt 3: prove the customizer is loading. This log gets replaced in
-    // Prompt 4 by the actual CSS injection. The "[PhillipsBrand]" prefix is
-    // a searchable pattern in the browser console.
-    console.log('[PhillipsBrand] Customizer initialized');
     return Promise.resolve();
   }
 }

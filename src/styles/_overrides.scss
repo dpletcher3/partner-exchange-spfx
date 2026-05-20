@@ -1,0 +1,144 @@
+// Brand overrides for out-of-the-box SharePoint web parts.
+//
+// SharePoint Online updates its DOM occasionally without major-version
+// notice, so these selectors are educated guesses based on the
+// `data-automation-id` attributes Microsoft uses as stable test hooks
+// (more stable than the Fluent-generated `.ms-*` class names). If a rule
+// doesn't take effect after deploying the customizer, open DevTools on
+// the affected web part, find the closest stable selector, and adjust.
+//
+// Every override block is annotated with what SharePoint default it's
+// overriding and why. Selectors stay single-attribute or single-class
+// where possible so a future tenant tweak doesn't out-specify us.
+//
+// CSS custom properties are used for everything — never hex codes here.
+// If a new color is needed, add it to _tokens.scss first.
+
+@use './tokens' as *;
+
+// ---------------------------------------------------------------------------
+// Hero web part
+// ---------------------------------------------------------------------------
+// SharePoint default: square corners; the per-tile darkening overlay is
+// inconsistent across the Hero's "layered", "tiles", and "side-by-side"
+// layouts. Brand override: `--phil-radius-xl` (16px) corners and a single
+// rgba(0,50,80,0.35) overlay so hero photos have consistent contrast
+// under titles regardless of layout choice.
+
+[data-automation-id="HeroWebPart"] {
+  border-radius: var(--phil-radius-xl);
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 50, 80, 0.35);
+    pointer-events: none;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// News web part
+// ---------------------------------------------------------------------------
+// SharePoint default: sharp corners on news cards; section heading is plain
+// text. Brand override: `--phil-radius-lg` (12px) on cards, plus an eyebrow
+// dash before the section title to match the Phillips visual language.
+
+[data-automation-id="NewsWebPart"] {
+  [data-automation-id="newsItem"],
+  .newsCard {
+    border-radius: var(--phil-radius-lg);
+    overflow: hidden;
+  }
+
+  // Eyebrow dash on the web-part header.
+  [data-automation-id="webPartHeader"]::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1.5px;
+    background-color: var(--phil-red);
+    margin-right: var(--phil-space-2);
+    vertical-align: middle;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Quick Links web part
+// ---------------------------------------------------------------------------
+// SharePoint default: bare-bones link tiles without a card surface; some
+// layouts skip the border entirely. Brand override: white tile background,
+// `--phil-gray-200` 1px border, `--phil-radius-lg` corners.
+//
+// Note: the list-formatter approach in
+// provisioning/quick-links-tile-formatting.json produces a richer result
+// for the Quick Links *list* embedded on the home page. This OOTB rule is
+// a fallback for Quick Links *web part* instances elsewhere on the site.
+
+[data-automation-id="QuickLinksWebPart"] {
+  [data-automation-id="link"],
+  .linkTile {
+    background-color: var(--phil-white);
+    border: 1px solid var(--phil-gray-200);
+    border-radius: var(--phil-radius-lg);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Highlighted Content web part
+// ---------------------------------------------------------------------------
+// SharePoint default: sharp corners on result cards. Brand override:
+// `--phil-radius-lg` corners to match News and Quick Links.
+
+[data-automation-id="HighlightedContentWebPart"] {
+  [data-automation-id="card"],
+  .card {
+    border-radius: var(--phil-radius-lg);
+    overflow: hidden;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Button web part
+// ---------------------------------------------------------------------------
+// SharePoint default: rectangular button with theme-color background and
+// inconsistent secondary styling. Brand override: pill shape, `--phil-red`
+// primary background, white-outline secondary variant per CLAUDE.md spec.
+
+[data-automation-id="ButtonWebPart"] {
+  button,
+  a[role="button"] {
+    border-radius: var(--phil-radius-pill);
+    padding: 7px 14px;
+  }
+
+  // Primary variant — solid Phillips Red.
+  [data-button-style="primary"],
+  button[data-style="primary"] {
+    background-color: var(--phil-red);
+    color: var(--phil-white);
+    border: none;
+  }
+
+  // Secondary variant — white outline on the section's own background.
+  [data-button-style="secondary"],
+  button[data-style="secondary"] {
+    background-color: transparent;
+    color: var(--phil-white);
+    border: 1px solid var(--phil-white);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section backgrounds — "Neutral" alternate
+// ---------------------------------------------------------------------------
+// SharePoint default: light gray for sections with the "Neutral" background
+// preset. Brand override: `--phil-red-tint` (#fef0ee) so neutral sections
+// pick up the Phillips palette instead of plain gray.
+
+[data-section-background="neutral"],
+.CanvasSection[data-section-color="neutral"] {
+  background-color: var(--phil-red-tint);
+}

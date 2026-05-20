@@ -92,11 +92,11 @@ This is the visible-progress prompt. After this, OOTB SharePoint web parts on th
 
 In the customizer's `onInit()` method:
 
-1. Import `src/styles/index.scss` from the customizer's TypeScript (side-effect import: `import '../../styles/index.scss';`) so Heft pulls the stylesheet into the bundle. Inside SCSS partials themselves, always use `@use './tokens' as *;` (or `@use './tokens' as t;` for namespaced access) — never `@import`. The SPFx 1.23 / Heft rig (`@microsoft/spfx-web-build-rig`) handles `.module.scss` and plain `.scss` out of the box; only customize `config/rig.json` or `config/typescript.json` if the default loader can't resolve a specific path.
-2. Build the compiled CSS into a single string at bundle time, then inject it as a `<style id="phil-brand">` tag into `<head>` if not already present
-3. Idempotent — if the style tag already exists (page reload, navigation), don't double-inject
+1. Rename the brand stylesheet entry point from `src/styles/index.scss` to `src/styles/index.global.scss`. The `.global.scss` extension matches Heft's `nonModuleFileExtensions` pattern (configured in `@microsoft/spfx-web-build-rig`), so the compiled CSS is auto-injected into `<head>` by sp-css-loader at runtime instead of being treated as a CSS Module (which would hash class names and break the OOTB selectors).
+2. Side-effect import from the customizer TS: `import '../../styles/index.global.scss';`. sp-css-loader handles injection and dedup automatically — the same SCSS module is loaded exactly once per page session, even across SPA navigations. No manual `<style>` tag creation needed.
+3. Inside SCSS partials, always use `@use './tokens' as *;` (or `@use './tokens' as t;` for namespaced access) — never `@import` (Dart Sass 3.0 removes it and double-emits `:root`).
 
-In `src/styles/_overrides.scss` (new partial, added to `index.scss` via `@use './overrides';` and consuming tokens via `@use './tokens' as *;`), write the brand overrides. Cover these built-in web parts at minimum:
+In `src/styles/_overrides.scss` (new partial, added to `index.global.scss` via `@use './overrides';` and consuming tokens via `@use './tokens' as *;`), write the brand overrides. Cover these built-in web parts at minimum:
 
 - **Hero web part:** `--phil-radius-xl` corners, ensure overlay is `rgba(0, 50, 80, 0.35)` over images
 - **News web part:** `--phil-radius-lg` corners on cards, eyebrow pattern applied to section titles
@@ -115,8 +115,8 @@ Each override block must include a comment explaining what SharePoint default it
 4. Add the customizer to your test site: `m365 spo customaction add --webUrl https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox --name "Phillips Brand" --location "ClientSideExtension.ApplicationCustomizer" --clientSideComponentId YOUR_COMPONENT_ID`
 5. Open the test site home page. Add (or confirm already present) a Hero web part, News web part, Quick Links web part, and a Button. Configure each with placeholder content.
 6. Confirm visually: Hero has rounded XL corners. News cards have rounded LG corners. Quick Links cards have brand styling. Button is pill-shaped with Phillips Red background.
-7. Inspect the page source. Confirm a single `<style id="phil-brand">` element is present in `<head>`.
-8. Navigate to a different page on the site. Confirm the style is still present (only one copy — not duplicated).
+7. Open DevTools → Elements → `<head>`. Confirm at least one `<style>` element contains `--phil-red` (search the inline style content). The element's `id` will be a sp-css-loader-generated hash, not `phil-brand` — that's expected; sp-css-loader auto-injects and there's no manual DOM call to set a custom id.
+8. Navigate to a different page on the site. Confirm the brand `<style>` is still present and the page hasn't accumulated a second copy of it — sp-css-loader's module cache prevents duplicate injection across SPA navigations.
 
 If all eight steps pass, Prompt 4 is complete. **This is the moment to commit and PR — the customizer alone is a meaningful v1 deliverable.**
 

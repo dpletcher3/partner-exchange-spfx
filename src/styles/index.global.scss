@@ -1,0 +1,19 @@
+// Phillips Brand stylesheet — entry point.
+//
+// The Application Customizer (Prompt 4) does a side-effect import of this
+// file from TypeScript:
+//
+//   import '../../styles/index.global.scss';
+//
+// The `.global.scss` extension matches the heft-sass-plugin's
+// `nonModuleFileExtensions` pattern, so the compiled CSS is auto-injected
+// into <head> by sp-css-loader at runtime instead of being treated as a
+// CSS Module (which would hash class names).
+//
+// Component .module.scss files (in Prompts 5-6) consume tokens and mixins
+// via `@use 'src/styles/tokens' as *;` directly — they don't go through
+// this entry point.
+
+@use './tokens';
+@use './mixins';
+@use './overrides';
