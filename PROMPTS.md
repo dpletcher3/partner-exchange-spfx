@@ -93,11 +93,11 @@ This is the visible-progress prompt. After this, OOTB SharePoint web parts on th
 
 In the customizer's `onInit()` method:
 
-1. Import `src/styles/index.scss`. The SPFx 1.23 / Heft rig (`@microsoft/spfx-web-build-rig`) handles `.module.scss` and plain `.scss` imports out of the box; only customize `config/rig.json` or `config/typescript.json` if the default loader can't resolve a specific path.
+1. Import `src/styles/index.scss` from the customizer's TypeScript (side-effect import: `import '../../styles/index.scss';`) so Heft pulls the stylesheet into the bundle. Inside SCSS partials themselves, always use `@use './tokens' as *;` (or `@use './tokens' as t;` for namespaced access) — never `@import`. The SPFx 1.23 / Heft rig (`@microsoft/spfx-web-build-rig`) handles `.module.scss` and plain `.scss` out of the box; only customize `config/rig.json` or `config/typescript.json` if the default loader can't resolve a specific path.
 2. Build the compiled CSS into a single string at bundle time, then inject it as a `<style id="phil-brand">` tag into `<head>` if not already present
 3. Idempotent — if the style tag already exists (page reload, navigation), don't double-inject
 
-In `src/styles/overrides.scss` (new file, imported from `index.scss`), write the brand overrides. Cover these built-in web parts at minimum:
+In `src/styles/_overrides.scss` (new partial, added to `index.scss` via `@use './overrides';` and consuming tokens via `@use './tokens' as *;`), write the brand overrides. Cover these built-in web parts at minimum:
 
 - **Hero web part:** `--phil-radius-xl` corners, ensure overlay is `rgba(0, 50, 80, 0.35)` over images
 - **News web part:** `--phil-radius-lg` corners on cards, eyebrow pattern applied to section titles
@@ -137,7 +137,7 @@ After scaffolding:
 2. Update the web part's display name to "Personalized Hero" and description to "Greeting that varies by time of day, with the current user's name, a live clock, and a time-zone selector. Designed for use at the top of the home page."
 3. Add the web part to the appropriate group in the web part picker (e.g., "Phillips" group — configure in the web part manifest)
 4. Replace the default React component with a minimal placeholder that renders the user's display name from `this.context.pageContext.user.displayName`
-5. Import `src/styles/_tokens.scss` in the web part's SCSS module so brand tokens are available
+5. In the web part's `.module.scss`, add `@use '../../styles/tokens' as *;` at the top so the brand SCSS variables (`$phil-red`, `$phil-radius-xl`, etc.) are available. Do not use the deprecated `@import` form. For values that don't need compile-time resolution, prefer the `var(--phil-*)` CSS custom properties — they cascade from `:root` and don't require an `@use` declaration.
 
 ### Manual Test
 
