@@ -105,8 +105,17 @@ Barlow Condensed and Montserrat are loaded via SharePoint Brand Center (admin co
 - **Clarity over cleverness in CSS.** Verbose selectors that future Dan can read beat tight ones future Dan can't.
 - **Comments in SCSS explain *why* a rule exists,** especially overrides of SharePoint defaults. Future maintainers won't know that `.ms-CommandBar` overrides exist to remove the dated drop shadow unless we tell them.
 - **Component files stay under 200 lines.** If a hero component grows past that, split it into subcomponents.
-- **Conventional commits:** `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `style:`. Prefix with the scope when useful: `feat(hero): add time-zone selector`.
-- **PRs reference the prompt number** they completed: "Closes Prompt 4 (CSS injection)."
+- **Git workflow.** Dan has delegated git ops to Claude. At the end of every prompt's Manual Test, *after Dan confirms it passed*, commit and push without asking. The discipline:
+  - Run `git status` first and summarize what changed in the response — short, no walls of text.
+  - Group changes into logical commits, not one giant commit per prompt. Typical pattern: one commit for the substantive code change (`feat`/`fix`/`refactor`), one for any docs updates (`docs`), one for any chore work (`chore`). If the prompt only produced one logical change, one commit is fine.
+  - Use conventional commit prefixes: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `style`. Scope to the area changed when useful: `feat(customizer):`, `docs(claude):`.
+  - Commit message body references the prompt number completed: `Completes Prompt N.` on its own line.
+  - Push after committing — don't leave commits sitting locally.
+  - Never `git add` `node_modules/`, `lib/`, `lib-commonjs/`, `.claude/`, build artifacts, or anything in `.gitignore`. If something unexpected shows up in `git status`, stop and surface it.
+  - Never `git push --force`. If a push is rejected (remote ahead, branch protection, anything), stop and ask — don't try to resolve it solo.
+  - After push, report: number of commits, short commit hashes, and confirmation the push succeeded.
+  - If you need a decision about how to split commits or what message to use, ask. If you hit a merge conflict, stop and surface it.
+- **PRs reference the prompt number** they completed: "Closes Prompt 4 (CSS injection)." (Commit bodies say "Completes Prompt N"; PR titles/descriptions say "Closes Prompt N" — both can be true for the PR that lands a prompt's work.)
 - **Don't bypass type errors.** No `@ts-ignore`, no `any`. If TypeScript complains, fix the underlying problem.
 - **Test in the SharePoint Workbench first**, then on a real test site. Workbench catches structural issues; only real sites catch CSP, theme, and OOTB-web-part interaction issues.
 
@@ -126,4 +135,11 @@ These are not in v1 scope. Document them here so future-us doesn't have to redis
 
 To be filled in during Phase 3 as prompts complete and behavior is confirmed. Format: short bullet under a sub-heading per prompt.
 
-(empty)
+### Prompt 3 — Application Customizer scaffold
+
+- **clientSideComponentId**: `e37132c1-6b4b-4c0c-9d59-2e35c666cb8f`
+  - Source: [src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.manifest.json](src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.manifest.json) line 4
+  - Needed in Prompt 4 for `m365 spo customaction add --clientSideComponentId ...` and in CI / deployment scripts
+- Entry point class: `PhillipsBrandApplicationCustomizer` (default export, extends `BaseApplicationCustomizer<Record<string, never>>`)
+- Customizer takes no configurable properties — `ClientSideComponentProperties` is `{}` in both `sharepoint/assets/elements.xml` and `sharepoint/assets/ClientSideInstance.xml`
+- Debug URL: `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/SitePages/Home.aspx` (set in [config/serve.json](config/serve.json))
