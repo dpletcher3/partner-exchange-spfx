@@ -40,4 +40,5 @@ desktop.ini
 # Heft build output
 lib-commonjs/
 lib/
+jest-output/
 
