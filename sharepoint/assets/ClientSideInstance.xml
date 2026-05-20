@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+    <ClientSideComponentInstance
+        Title="PhillipsBrand"
+        Location="ClientSideExtension.ApplicationCustomizer"
+        ComponentId="e37132c1-6b4b-4c0c-9d59-2e35c666cb8f"
+        Properties="{}">
+    </ClientSideComponentInstance>
+</Elements>

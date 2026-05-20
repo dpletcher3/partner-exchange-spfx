@@ -5,12 +5,12 @@
     "environment": "spo",
     "skipFeatureDeployment": true,
     "useGulp": false,
-    "componentType": "webpart",
+    "componentType": "extension",
     "template": "none",
-    "componentName": "placeholder",
-    "componentDescription": "Placeholder web part to be deleted after scaffolding",
+    "componentName": "PhillipsBrand",
+    "componentDescription": "Injects Phillips brand CSS site-wide",
     "plusBeta": false,
-    "isCreatingSolution": true,
+    "isCreatingSolution": false,
     "nodeVersion": "22.22.3",
     "sdksVersions": {},
     "version": "1.23.0",
@@ -18,6 +18,7 @@
     "libraryId": "7b2e6ef9-8db7-41cd-9660-3aee7feb8f63",
     "packageManager": "npm",
     "solutionShortDescription": "partner-exchange-spfx description",
-    "isDomainIsolated": false
+    "isDomainIsolated": false,
+    "extensionType": "ApplicationCustomizer"
   }
 }

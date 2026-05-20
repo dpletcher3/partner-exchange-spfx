@@ -31,7 +31,13 @@
         "title": "partner-exchange-spfx Feature",
         "description": "The feature that activates elements of the partner-exchange-spfx solution.",
         "id": "696544e2-bbd7-48bd-8d4c-26f110aa1bda",
-        "version": "1.0.0.0"
+        "version": "1.0.0.0",
+        "assets": {
+          "elementManifests": [
+            "elements.xml",
+            "ClientSideInstance.xml"
+          ]
+        }
       }
     ]
   },
