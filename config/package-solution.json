@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "partner-exchange-spfx",
+    "title": "Partner Exchange Brand & Components",
+    "id": "7b2e6ef9-8db7-41cd-9660-3aee7feb8f63",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "Phillips Corporation",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Partner Exchange Brand & Components"
+      },
+      "longDescription": {
+        "default": "Application Customizer that injects Phillips brand CSS site-wide, plus a Personalized Hero web part."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "partner-exchange-spfx Feature",
+        "description": "The feature that activates elements of the partner-exchange-spfx solution.",
+        "id": "696544e2-bbd7-48bd-8d4c-26f110aa1bda",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/partner-exchange-spfx.sppkg"
+  }
+}
