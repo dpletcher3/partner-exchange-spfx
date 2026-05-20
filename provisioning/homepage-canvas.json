@@ -1,0 +1,122 @@
+{
+  "_description": "Homepage layout reference for the Phillips Intranet home site. Use this with PnP PowerShell's Add-PnPPage / Add-PnPPageWebPart cmdlets to programmatically build the page. The structure mirrors the screenshot: hero + quick links + Phillips Loop + Phillips In The News on the main canvas, with The Hive (Viva Engage) in a right vertical section.",
+  "pageName": "Home.aspx",
+  "pageTitle": "Phillips Portal Exchange",
+  "pageLayoutType": "Home",
+  "headerLayoutType": "FullWidthImage",
+  "headerImageUrl": "/SiteAssets/phillips-sky-hero.jpg",
+  "showPublishDate": false,
+  "showTopicHeader": false,
+  "promoteAsNewsArticle": false,
+
+  "sections": [
+    {
+      "sectionOrder": 1,
+      "sectionType": "TwoColumnRight",
+      "verticalSectionEnabled": false,
+      "_note": "Main content area with a wider left column for hero + content, narrower right column for the social sidebar (The Hive)",
+      "columns": [
+        {
+          "columnOrder": 1,
+          "columnFactor": 8,
+          "webParts": [
+            {
+              "type": "Hero",
+              "_componentId": "c4bd7b2f-7b6e-4599-8485-16504575f590",
+              "properties": {
+                "heroLayoutType": "OneTile",
+                "tileHeight": 410,
+                "tiles": [
+                  {
+                    "title": "Good Morning, Phillips",
+                    "subTitle": "Tuesday, May 19, 2026",
+                    "description": "Welcome to the Phillips Portal Exchange",
+                    "imageUrl": "/SiteAssets/phillips-sky-hero.jpg",
+                    "ctaText": "Explore",
+                    "url": "/SitePages/Home.aspx",
+                    "_note": "Personalized 'Good Morning, [Name]' with live time/time-zone selector requires a custom SPFx web part. Hero web part supports static title + image + CTA only."
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Text",
+              "properties": {
+                "Text": "<h2 style='font-family:Barlow Condensed; text-transform:uppercase; letter-spacing:1px; color:#323130; font-weight:600;'>Quick Links</h2>"
+              }
+            },
+            {
+              "type": "List",
+              "_componentId": "f92bf067-bc19-489e-a556-7fe95f508720",
+              "properties": {
+                "selectedListId": "REPLACE_WITH_QUICK_LINKS_LIST_GUID",
+                "selectedView": "TileView",
+                "_note": "Use the embedded List web part referencing Quick Links list with the Tile view (uses quick-links-tile-formatting.json). Alternative: use the built-in Quick Links web part with Button layout, but it is harder to brand."
+              }
+            },
+            {
+              "type": "Text",
+              "properties": {
+                "Text": "<h2 style='font-family:Barlow Condensed; text-transform:uppercase; letter-spacing:1px; color:#323130; font-weight:600; margin-top:32px;'>The Phillips Loop</h2>"
+              }
+            },
+            {
+              "type": "HighlightedContent",
+              "_componentId": "daf0b71c-6de8-4ef7-b511-faae7c388708",
+              "properties": {
+                "title": "",
+                "sources": {
+                  "type": "List",
+                  "listId": "REPLACE_WITH_PHILLIPS_LOOP_LIST_GUID"
+                },
+                "layout": "Card",
+                "maxItemsPerPage": 3,
+                "showTitle": false
+              }
+            },
+            {
+              "type": "Text",
+              "properties": {
+                "Text": "<h2 style='font-family:Barlow Condensed; text-transform:uppercase; letter-spacing:1px; color:#323130; font-weight:600; margin-top:32px;'>Phillips In The News</h2>"
+              }
+            },
+            {
+              "type": "News",
+              "_componentId": "8c88f208-6c77-4bdb-86a0-0c47b4316588",
+              "properties": {
+                "newsDataSourceProp": "Sites",
+                "layoutId": "FeaturedNews",
+                "maxItemsPerPage": 4,
+                "newsSiteList": [],
+                "_note": "Configure to pull from selected hub-associated sites. The 'FeaturedNews' layout most closely matches the side-by-side article card layout in the screenshot."
+              }
+            }
+          ]
+        },
+        {
+          "columnOrder": 2,
+          "columnFactor": 4,
+          "webParts": [
+            {
+              "type": "Text",
+              "properties": {
+                "Text": "<h2 style='font-family:Barlow Condensed; text-transform:uppercase; letter-spacing:1px; color:#323130; font-weight:600;'>The Hive</h2>"
+              }
+            },
+            {
+              "type": "VivaEngage",
+              "_componentId": "3cbe3021-0d6c-4f9e-bd14-7ad3a91a52b0",
+              "properties": {
+                "feedType": "Home",
+                "displayHeader": false,
+                "displayFooter": false,
+                "displayPromptedPost": true,
+                "_note": "Replaces the old Yammer Conversations web part. 'Home' feed shows the user's personalized Viva Engage feed; use 'Group' feed to pin a specific community like 'Phillips Hive'."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

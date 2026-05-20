@@ -1,0 +1,59 @@
+{
+  "name": "Phillips Brand",
+  "isInverted": false,
+  "palette": {
+    "themePrimary": "#F9423A",
+    "themeLighterAlt": "#fef6f5",
+    "themeLighter": "#fddad7",
+    "themeLight": "#fcbab5",
+    "themeTertiary": "#fa7c75",
+    "themeSecondary": "#fa4f47",
+    "themeDarkAlt": "#e03b34",
+    "themeDark": "#bd322c",
+    "themeDarker": "#8b2520",
+
+    "accent": "#00AEEF",
+
+    "neutralLighterAlt": "#faf9f8",
+    "neutralLighter": "#f3f2f1",
+    "neutralLight": "#edebe9",
+    "neutralQuaternaryAlt": "#e1dfdd",
+    "neutralQuaternary": "#d0d0d0",
+    "neutralTertiaryAlt": "#c8c6c4",
+    "neutralTertiary": "#a19f9d",
+    "neutralSecondaryAlt": "#8a8886",
+    "neutralSecondary": "#605e5c",
+    "neutralPrimaryAlt": "#3b3a39",
+    "neutralPrimary": "#323130",
+    "neutralDark": "#201f1e",
+
+    "black": "#000000",
+    "white": "#ffffff",
+
+    "primaryBackground": "#ffffff",
+    "primaryText": "#323130",
+    "bodyBackground": "#ffffff",
+    "bodyText": "#323130",
+    "disabledBackground": "#f3f2f1",
+    "disabledText": "#a19f9d"
+  },
+  "_notes": {
+    "brandColors": {
+      "phillipsRed": "#F9423A (themePrimary)",
+      "phillipsGold": "#F68B33 (use as alternate theme via Brand Center, or as section accent)",
+      "electricBlue": "#00AEEF (accent slot - used for links and hover states in compatible web parts)",
+      "black": "#000000"
+    },
+    "secondaryThemeGoldVariant": {
+      "themePrimary": "#F68B33",
+      "themeLighterAlt": "#fef8f3",
+      "themeLighter": "#fce0c7",
+      "themeLight": "#fac598",
+      "themeTertiary": "#f6a96a",
+      "themeSecondary": "#f49543",
+      "themeDarkAlt": "#dd7d2e",
+      "themeDark": "#ba6926",
+      "themeDarker": "#894d1c"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "_description": "Seed data for the Quick Links list. Use PnP PowerShell Add-PnPListItem in a loop to populate, or import via SharePoint UI 'Edit in grid view'.",
+  "items": [
+    {
+      "Title": "Dynamics 365 CRM",
+      "QLink": {
+        "Url": "https://phillipscorp.crm.dynamics.com",
+        "Description": "Dynamics 365 CRM — CONFIRM ACTUAL ORG URL BEFORE GO-LIVE"
+      },
+      "IconName": "ContactCard",
+      "ShortDescription": "Customer relationship management — accounts, contacts, opportunities, cases",
+      "SortOrder": 10,
+      "AudienceGroup": "All Employees"
+    },
+    {
+      "Title": "Finance and Operations",
+      "QLink": {
+        "Url": "https://phillipscorp.operations.dynamics.com",
+        "Description": "D365 Finance and Operations — CONFIRM ACTUAL ORG URL BEFORE GO-LIVE"
+      },
+      "IconName": "Financial",
+      "ShortDescription": "ERP — financials, projects, supply chain, manufacturing",
+      "SortOrder": 20,
+      "AudienceGroup": "All Employees"
+    },
+    {
+      "Title": "MyCDT",
+      "QLink": {
+        "Url": "https://REPLACE_WITH_MYCDT_URL",
+        "Description": "Competency Development Tool"
+      },
+      "IconName": "Trophy",
+      "ShortDescription": "Competency Development Tool",
+      "SortOrder": 30,
+      "AudienceGroup": "All Employees"
+    },
+    {
+      "Title": "Global Phillips Website",
+      "QLink": {
+        "Url": "https://phillipscorp.com",
+        "Description": "Phillips Corporation public website"
+      },
+      "IconName": "Globe",
+      "ShortDescription": "External-facing corporate website",
+      "SortOrder": 40,
+      "AudienceGroup": "All Employees"
+    },
+    {
+      "Title": "Paylocity",
+      "QLink": {
+        "Url": "https://access.paylocity.com",
+        "Description": "Paylocity HRIS"
+      },
+      "IconName": "People",
+      "ShortDescription": "Payroll, benefits, time and attendance",
+      "SortOrder": 50,
+      "AudienceGroup": "All Employees"
+    }
+  ]
+}

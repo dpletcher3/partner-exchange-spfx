@@ -1,0 +1,38 @@
+# SPFx build output
+dist/
+lib/
+temp/
+release/
+solution/
+sharepoint/solution/*.sppkg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# SPFx local dev
+.heft/
+.rush/
+config/copy-assets.json.tmp
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Claude Code
+.claude/

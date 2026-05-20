@@ -1,0 +1,205 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/sp/site-design-script-actions.schema.json",
+  "actions": [
+    {
+      "verb": "applyTheme",
+      "themeName": "Phillips Brand"
+    },
+    {
+      "verb": "setSiteBranding",
+      "navBarLayout": "Cascading",
+      "headerLayout": "Extended",
+      "headerEmphasis": "Strong",
+      "showHeaderTitle": true,
+      "showHeaderLogo": true
+    },
+    {
+      "verb": "setRegionalSettings",
+      "timeZone": 10,
+      "locale": 1033,
+      "sortOrder": 25,
+      "hourFormat": "12"
+    },
+
+    {
+      "verb": "addNavLink",
+      "url": "/SitePages/Home.aspx",
+      "displayName": "Home",
+      "isWebRelative": true
+    },
+    {
+      "verb": "addNavLink",
+      "url": "/SitePages/OurCulture.aspx",
+      "displayName": "Our Culture",
+      "isWebRelative": true
+    },
+    {
+      "verb": "addNavLink",
+      "url": "/SitePages/OurPartners.aspx",
+      "displayName": "Our Partners",
+      "isWebRelative": true
+    },
+    {
+      "verb": "addNavLink",
+      "url": "/SitePages/Dashboard.aspx",
+      "displayName": "Dashboard",
+      "isWebRelative": true
+    },
+    {
+      "verb": "addNavLink",
+      "url": "/SitePages/TheHub.aspx",
+      "displayName": "The Hub",
+      "isWebRelative": true
+    },
+
+    {
+      "verb": "createSPList",
+      "listName": "Quick Links",
+      "templateType": 100,
+      "subactions": [
+        {
+          "verb": "setDescription",
+          "description": "Tile-formatted quick links for the homepage. Add items here to update homepage tiles."
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "URL",
+          "displayName": "Link",
+          "internalName": "QLink",
+          "isRequired": true,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Text",
+          "displayName": "Icon Name",
+          "internalName": "IconName",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Text",
+          "displayName": "Description",
+          "internalName": "ShortDescription",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Number",
+          "displayName": "Sort Order",
+          "internalName": "SortOrder",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Choice",
+          "displayName": "Audience Group",
+          "internalName": "AudienceGroup",
+          "choices": ["All Employees", "Commercial", "Federal/Defense", "Hybrid Manufacturing", "Education", "IT", "HR"],
+          "isRequired": false,
+          "addToDefaultView": true
+        }
+      ]
+    },
+
+    {
+      "verb": "createSPList",
+      "listName": "The Phillips Loop",
+      "templateType": 100,
+      "subactions": [
+        {
+          "verb": "setDescription",
+          "description": "Featured stories and partner spotlights surfaced via the Highlighted Content web part."
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Text",
+          "displayName": "Story Title",
+          "internalName": "StoryTitle",
+          "isRequired": true,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Note",
+          "displayName": "Summary",
+          "internalName": "StorySummary",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "URL",
+          "displayName": "Hero Image",
+          "internalName": "HeroImage",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "DateTime",
+          "displayName": "Publish Date",
+          "internalName": "PublishDate",
+          "isRequired": false,
+          "addToDefaultView": true
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Choice",
+          "displayName": "Category",
+          "internalName": "LoopCategory",
+          "choices": ["Partner Spotlight", "Culture", "Milestones", "Community", "Behind the Scenes"],
+          "isRequired": false,
+          "addToDefaultView": true
+        }
+      ]
+    },
+
+    {
+      "verb": "createSPList",
+      "listName": "News Highlights",
+      "templateType": 100,
+      "subactions": [
+        {
+          "verb": "setDescription",
+          "description": "Curated news items for the Phillips In The News web part. Pull these into the News web part with content type filtering."
+        },
+        {
+          "verb": "addSPField",
+          "fieldType": "Choice",
+          "displayName": "Business Unit",
+          "internalName": "BusinessUnit",
+          "choices": ["Commercial", "Federal/Defense", "Hybrid Manufacturing", "Education", "Corporate"],
+          "isRequired": false,
+          "addToDefaultView": true
+        }
+      ]
+    },
+
+    {
+      "verb": "associateExtension",
+      "title": "Phillips Header Notice",
+      "location": "ClientSideExtension.ApplicationCustomizer",
+      "clientSideComponentId": "REPLACE_WITH_SPFX_COMPONENT_ID",
+      "clientSideComponentProperties": "{}",
+      "registrationId": "",
+      "registrationType": 0,
+      "scope": "Web"
+    },
+
+    {
+      "verb": "triggerFlow",
+      "url": "REPLACE_WITH_FLOW_URL_FOR_SITE_REQUEST_NOTIFICATIONS",
+      "name": "Notify IT on new site provisioning",
+      "parameters": {
+        "siteUrl": "{site.url}",
+        "owner": "{site.owner}"
+      }
+    }
+  ],
+  "bindata": {},
+  "version": 1
+}
