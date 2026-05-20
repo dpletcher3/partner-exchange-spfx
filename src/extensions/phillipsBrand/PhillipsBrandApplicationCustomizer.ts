@@ -12,32 +12,6 @@ export default class PhillipsBrandApplicationCustomizer
 
   public onInit(): Promise<void> {
     this.injectBrandStyles();
-
-    // TEMPORARY DIAGNOSTIC — remove after end-to-end verification.
-    // The brand CSS itself injects --phil-* custom properties on :root, but
-    // the sandbox home page has nothing yet that consumes them, so a working
-    // injection looks identical to a non-working one. The banner below makes
-    // onInit execution visible regardless of what's on the page.
-    const banner = document.createElement('div');
-    banner.id = 'phil-test-banner';
-    banner.textContent = '🟥 PARTNER EXCHANGE CUSTOMIZER LOADED 🟥';
-    banner.style.cssText = [
-      'position: fixed',
-      'top: 0',
-      'left: 0',
-      'right: 0',
-      'z-index: 2147483647',
-      'background: #F9423A',
-      'color: white',
-      'font: bold 16px/40px Arial, sans-serif',
-      'text-align: center',
-      'padding: 0 16px',
-      'box-shadow: 0 2px 8px rgba(0,0,0,0.3)'
-    ].join(';');
-    document.body.appendChild(banner);
-
-    console.log('[PhilCustomizer] Banner injected, onInit complete');
-
     return Promise.resolve();
   }
 
