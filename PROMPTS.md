@@ -72,7 +72,7 @@ Verify the generator created `src/extensions/phillipsBrand/PhillipsBrandApplicat
 1. Remove the default "Top" and "Bottom" placeholder code — the customizer will not render any UI, only inject CSS
 2. In the `onInit()` method, log a message confirming the customizer initialized (this gets removed in Prompt 4 but proves wiring works now)
 3. Update `config/package-solution.json` so the feature framework references this extension correctly
-4. Update `config/serve.json` so debugging the extension works against the dev sandbox: `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox`
+4. Update `config/serve.json` so debugging the extension works against the dev sandbox: `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`
 
 ### Manual Test
 
@@ -112,7 +112,7 @@ Each override block must include a comment explaining what SharePoint default it
 1. Run `npm run build` (which executes `heft test --clean --production && heft package-solution --production`). Confirm a `.sppkg` is produced under `sharepoint/solution/`.
 2. Upload the `.sppkg` to the App Catalog using PnP CLI: `m365 spo app add --filePath sharepoint/solution/partner-exchange-spfx.sppkg --overwrite --appCatalogScope tenant`
 3. Deploy it: `m365 spo app deploy --name partner-exchange-spfx.sppkg --appCatalogScope tenant`
-4. Add the customizer to your test site: `m365 spo customaction add --webUrl https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox --name "Phillips Brand" --location "ClientSideExtension.ApplicationCustomizer" --clientSideComponentId YOUR_COMPONENT_ID`
+4. Add the customizer to your test site: `m365 spo customaction add --webUrl https://phillipscorp.sharepoint.com/sites/spfx-extension-test --name "Phillips Brand" --location "ClientSideExtension.ApplicationCustomizer" --clientSideComponentId YOUR_COMPONENT_ID`
 5. Open the test site home page. Add (or confirm already present) a Hero web part, News web part, Quick Links web part, and a Button. Configure each with placeholder content.
 6. Confirm visually: Hero has rounded XL corners. News cards have rounded LG corners. Quick Links cards have brand styling. Button is pill-shaped with Phillips Red background.
 7. Open DevTools → Elements → `<head>`. Confirm at least one `<style>` element contains `--phil-red` (search the inline style content). The element's `id` will be a sp-css-loader-generated hash, not `phil-brand` — that's expected; sp-css-loader auto-injects and there's no manual DOM call to set a custom id.
@@ -260,7 +260,7 @@ Edit `provisioning/quick-links-tile-formatting.json` to match the rounded-corner
 Re-apply the formatter to the Quick Links list on the test site using PnP CLI:
 
 ```
-m365 spo list view set --webUrl https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox --listTitle "Quick Links" --title "All Items" --CustomFormatter "@./provisioning/quick-links-tile-formatting.json"
+m365 spo list view set --webUrl https://phillipscorp.sharepoint.com/sites/spfx-extension-test --listTitle "Quick Links" --title "All Items" --CustomFormatter "@./provisioning/quick-links-tile-formatting.json"
 ```
 
 ### Manual Test

@@ -98,7 +98,7 @@ SharePoint's tenant theme API accepts **exactly the 22 slot names** in [phillips
 
 ```bash
 m365 spo theme apply \
-  --webUrl https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox \
+  --webUrl https://phillipscorp.sharepoint.com/sites/spfx-extension-test \
   --name "Phillips Brand"
 ```
 
@@ -115,7 +115,7 @@ These steps remain as documented in [provisioning-deployment-guide.md](provision
 ## Manual test — verify Step 1 worked
 
 1. Run `m365 spo theme list --output json`. Confirm exactly one entry named `Phillips Brand` is returned with a `themeJson` that includes `"themePrimary":"#F9423A"`.
-2. Open `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox` in a browser, logged in as a site admin.
+2. Open `https://phillipscorp.sharepoint.com/sites/spfx-extension-test` in a browser, logged in as a site admin.
 3. Click the gear icon (top right) → **Change the look** → **Theme**.
 4. Confirm **Phillips Brand** appears in the theme picker alongside the built-in themes.
 5. Click **Phillips Brand**, then **Save**. The site re-renders with red accents.

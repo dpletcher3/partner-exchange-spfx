@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
   "port": 4321,
   "https": true,
-  "initialPage": "https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/SitePages/Home.aspx",
+  "initialPage": "https://phillipscorp.sharepoint.com/sites/spfx-extension-test/SitePages/Home.aspx",
   "serveConfigurations": {
     "default": {
-      "pageUrl": "https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/SitePages/Home.aspx",
+      "pageUrl": "https://phillipscorp.sharepoint.com/sites/spfx-extension-test/SitePages/Home.aspx",
       "customActions": {
         "e37132c1-6b4b-4c0c-9d59-2e35c666cb8f": {
           "location": "ClientSideExtension.ApplicationCustomizer",
