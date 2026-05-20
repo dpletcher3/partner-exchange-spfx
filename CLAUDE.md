@@ -6,11 +6,12 @@ Partner Exchange SPFx is the custom SharePoint Framework solution that gives the
 
 ## Locked architectural decisions
 
-- **SPFx version:** 1.20.x (latest stable at build time — verify with `npx @microsoft/generator-sharepoint --version` before scaffolding)
-- **React:** 17 (SPFx's pinned version — do not upgrade to 18)
-- **TypeScript:** 5.x
+- **SPFx runtime:** 1.23.x (pinned in `package.json` via `@microsoft/sp-*` deps). *Bumped from 1.20.x on 2026-05-20 because Microsoft moved off Node 18 starting with SPFx 1.21; we'd rather migrate now with zero code than later under deadline.*
+- **SPFx generator:** 1.23.x (Yeoman generator package. Verify with `npm view @microsoft/generator-sharepoint version`)
+- **React:** 17 (SPFx 1.23.x still pins React 17 — do not upgrade to 18 without confirming SPFx-side support)
+- **TypeScript:** 5.x (introduced by SPFx 1.21+, present here via SPFx 1.23.x's bundled rush-stack-compiler-5.x). *Bumped from 4.7.x alongside the runtime bump on 2026-05-20 — single coordinated migration.*
 - **UI library:** Fluent UI v9 (`@fluentui/react-components`)
-- **Node:** 18 LTS, pinned via `.nvmrc`
+- **Node:** 22 LTS, pinned via `.nvmrc`. *Bumped from 18 on 2026-05-20 — SPFx 1.21+ requires Node 22 LTS; staying on 18 would have stranded us on the unsupported SPFx 1.20.x line.*
 - **Styling:** SCSS modules per component, with CSS custom properties for brand tokens defined once in `src/styles/_tokens.scss` and imported by both the customizer and the web part
 - **Solution packaging:** one `.sppkg` containing both the Application Customizer and the Personalized Hero web part
 - **CI:** GitHub Actions, `.github/workflows/build.yml`, produces `.sppkg` as artifact

@@ -17,19 +17,19 @@ Run the SharePoint Framework Yeoman generator to scaffold the solution into the 
 
 After scaffolding:
 
-1. Verify the generated files match what SPFx 1.20.x produces: `package.json`, `tsconfig.json`, `gulpfile.js`, `config/config.json`, `config/package-solution.json`, `config/serve.json`, `.gitignore`
+1. Verify the generated files match what SPFx 1.23.x produces: `package.json`, `tsconfig.json`, `eslint.config.js`, `config/config.json`, `config/package-solution.json`, `config/serve.json`, `config/rig.json`, `.gitignore` (note: no `gulpfile.js` — SPFx 1.23 uses Heft, not gulp)
 2. Update `config/package-solution.json` so the solution name is `partner-exchange-spfx`, the solution title is `Partner Exchange Brand & Components`, and the developer name is `Phillips Corporation`
 3. Run `npm install` and confirm it completes without errors
 4. Run `npm audit` and resolve any high or critical vulnerabilities (do not auto-fix breaking changes; surface them as a question if `npm audit fix` would bump majors)
 
 ### Manual Test
 
-1. Run `ls -la` in the repo root. Confirm the SPFx files listed above all exist.
+1. Run `ls` in the repo root (PowerShell) or `ls -la` (bash). Confirm the SPFx files listed above all exist.
 2. Open `config/package-solution.json` in your editor. Confirm the `name`, `title`, and `developer.name` fields match the values above.
-3. Run `gulp trust-dev-cert` and accept the certificate prompt.
-4. Run `gulp serve --nobrowser`. Wait until you see `Server started` in the terminal.
-5. Open `https://phillipscorp.sharepoint.com/_layouts/15/workbench.aspx` in a browser. Confirm the workbench loads.
-6. Stop the gulp server with Ctrl+C.
+3. Run `npx heft trust-dev-cert` and accept the Windows certificate prompt. Console prints `Successfully trusted development certificate.`
+4. Run `npm start` (which executes `heft start --clean`). Wait until you see `[start] Server started at https://localhost:4321` in the terminal.
+5. Open `https://phillipscorp.sharepoint.com/_layouts/15/workbench.aspx` in a browser. Accept the "Load debug scripts?" prompt. Confirm the workbench canvas loads.
+6. Stop the dev server with Ctrl+C in the terminal.
 
 If all six steps pass, Prompt 1 is complete.
 
@@ -76,12 +76,12 @@ Verify the generator created `src/extensions/phillipsBrand/PhillipsBrandApplicat
 
 ### Manual Test
 
-1. Open `config/serve.json`. Replace `phillipscorp` with the actual tenant name.
-2. Run `gulp serve` (without `--nobrowser`).
-3. When the browser opens, accept the "Load debug scripts?" prompt.
+1. Open `config/serve.json`. Confirm `initialPage` includes the actual tenant (e.g. `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/_layouts/15/workbench.aspx`).
+2. Run `npm start` (which executes `heft start --clean`). Wait for `[start] Server started at https://localhost:4321`. (Heft does not auto-open the browser — that was a gulp behavior.)
+3. Open the URL from `serve.json` `initialPage` in your browser. Accept the "Load debug scripts?" prompt.
 4. Open the browser's developer console.
 5. Confirm the console shows the log message you added in `onInit()`.
-6. Stop the gulp server.
+6. Stop the dev server with Ctrl+C.
 
 If all six steps pass, Prompt 3 is complete.
 
@@ -93,7 +93,7 @@ This is the visible-progress prompt. After this, OOTB SharePoint web parts on th
 
 In the customizer's `onInit()` method:
 
-1. Import `src/styles/index.scss` (configure Webpack via `gulpfile.js` if needed so SCSS imports resolve in the extension bundle)
+1. Import `src/styles/index.scss`. The SPFx 1.23 / Heft rig (`@microsoft/spfx-web-build-rig`) handles `.module.scss` and plain `.scss` imports out of the box; only customize `config/rig.json` or `config/typescript.json` if the default loader can't resolve a specific path.
 2. Build the compiled CSS into a single string at bundle time, then inject it as a `<style id="phil-brand">` tag into `<head>` if not already present
 3. Idempotent — if the style tag already exists (page reload, navigation), don't double-inject
 
@@ -110,7 +110,7 @@ Each override block must include a comment explaining what SharePoint default it
 
 ### Manual Test
 
-1. Run `gulp bundle && gulp package-solution`. Confirm a `.sppkg` is produced under `sharepoint/solution/`.
+1. Run `npm run build` (which executes `heft test --clean --production && heft package-solution --production`). Confirm a `.sppkg` is produced under `sharepoint/solution/`.
 2. Upload the `.sppkg` to the App Catalog using PnP CLI: `m365 spo app add --filePath sharepoint/solution/partner-exchange-spfx.sppkg --overwrite --appCatalogScope tenant`
 3. Deploy it: `m365 spo app deploy --name partner-exchange-spfx.sppkg --appCatalogScope tenant`
 4. Add the customizer to your test site: `m365 spo customaction add --webUrl https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox --name "Phillips Brand" --location "ClientSideExtension.ApplicationCustomizer" --clientSideComponentId YOUR_COMPONENT_ID`
@@ -141,12 +141,12 @@ After scaffolding:
 
 ### Manual Test
 
-1. Run `gulp serve` against the test site.
+1. Run `npm start` against the test site (the URL in `config/serve.json` should point to it).
 2. Open the test site's home page in edit mode.
 3. Add a new web part — search the picker for "Personalized Hero".
 4. Confirm the web part appears in the picker under the "Phillips" group with the description from step 2.
 5. Add it to the page. Confirm the placeholder renders the current user's display name.
-6. Stop gulp.
+6. Stop the dev server with Ctrl+C.
 
 If all six steps pass, Prompt 5 is complete.
 
@@ -170,7 +170,7 @@ Make the time-zone selection persist via `localStorage` so the user's choice sur
 
 ### Manual Test
 
-1. Run `gulp serve` against the test site.
+1. Run `npm start` against the test site.
 2. Open the home page in edit mode. The Personalized Hero web part should already be on the page from Prompt 5; if not, add it.
 3. Verify the greeting reads correctly for the current time (e.g., "Good morning" if it's 9am local).
 4. Verify your name appears as "Welcome back, {firstName}."
@@ -180,7 +180,7 @@ Make the time-zone selection persist via `localStorage` so the user's choice sur
 8. Reload the page. Verify the time zone you selected persists (`localStorage`).
 9. Wait 60 seconds. Verify the clock advances by one minute (not 60 seconds — minutes only).
 10. Resize the browser window to ~400px wide. Verify the hero remains readable and the height shrinks to 120px.
-11. Stop gulp.
+11. Stop the dev server with Ctrl+C.
 
 If all eleven steps pass, Prompt 6 is complete.
 
@@ -192,14 +192,12 @@ Create `.github/workflows/build.yml` that:
 
 1. Triggers on push to any branch and on PR to `main`
 2. Runs on `ubuntu-latest`
-3. Uses Node 18 (from `.nvmrc`)
-4. Caches `node_modules`
+3. Uses `actions/setup-node@v4` with `node-version-file: '.nvmrc'` (which currently resolves to Node 22; ensures CI tracks the repo pin automatically). `ubuntu-latest` runners have Node 22 LTS pre-installed but `setup-node` makes the version explicit and lockable.
+4. Caches `~/.npm` (the npm cache) keyed on `package-lock.json` hash — this is the modern equivalent of caching `node_modules` and pairs better with `npm ci`
 5. Runs `npm ci`
-6. Runs `gulp build` (catches lint and type errors)
-7. Runs `gulp bundle --ship`
-8. Runs `gulp package-solution --ship`
-9. Uploads the `.sppkg` from `sharepoint/solution/` as a GitHub Actions artifact named `partner-exchange-spfx-sppkg`
-10. On `main` only: tags the artifact with the commit SHA so deploys are traceable
+6. Runs `npm run build` — this is the single Heft command that replaces the old `gulp build && gulp bundle --ship && gulp package-solution --ship` chain. The npm script is `heft test --clean --production && heft package-solution --production`, which runs lint, type-check, bundle, and package in one pass.
+7. Uploads the `.sppkg` from `sharepoint/solution/` as a GitHub Actions artifact named `partner-exchange-spfx-sppkg`
+8. On `main` only: tags the artifact with the commit SHA so deploys are traceable
 
 Also create `.github/dependabot.yml` configured to weekly-check npm dependencies. Group SPFx-related packages (anything starting with `@microsoft/sp-`) into a single PR so SPFx upgrades happen atomically.
 
@@ -239,7 +237,7 @@ Contents of `docs/DEPLOY.md`:
 
 ### Manual Test
 
-1. Build a fresh `.sppkg` locally: `gulp bundle --ship && gulp package-solution --ship`
+1. Build a fresh `.sppkg` locally: `npm run build` (executes `heft test --clean --production && heft package-solution --production`)
 2. Following only the steps in `docs/DEPLOY.md` (don't reference anything outside that file), deploy to a clean test site.
 3. Confirm the customizer activates and styling appears.
 4. Confirm the Personalized Hero web part can be added to a page.
