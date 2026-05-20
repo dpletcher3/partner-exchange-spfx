@@ -76,14 +76,13 @@ Verify the generator created `src/extensions/phillipsBrand/PhillipsBrandApplicat
 
 ### Manual Test
 
-1. Open `config/serve.json`. Confirm `initialPage` includes the actual tenant (e.g. `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/_layouts/15/workbench.aspx`).
-2. Run `npm start` (which executes `heft start --clean`). Wait for `[start] Server started at https://localhost:4321`. (Heft does not auto-open the browser — that was a gulp behavior.)
-3. Open the URL from `serve.json` `initialPage` in your browser. Accept the "Load debug scripts?" prompt.
-4. Open the browser's developer console.
-5. Confirm the console shows the log message you added in `onInit()`.
-6. Stop the dev server with Ctrl+C.
+1. Run `npm start` (which executes `heft start --clean`). Wait for `[start] Server started at https://localhost:4321`. (Heft does not auto-open the browser — that was a gulp behavior.)
+2. Open the URL from `serve.json` `initialPage` in your browser. Accept the "Load debug scripts?" prompt.
+3. Open the browser's developer console.
+4. Confirm the console shows the log message you added in `onInit()`.
+5. Stop the dev server with Ctrl+C.
 
-If all six steps pass, Prompt 3 is complete.
+If all five steps pass, Prompt 3 is complete.
 
 ---
 
