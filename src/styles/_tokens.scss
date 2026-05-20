@@ -1,0 +1,110 @@
+// Phillips Brand tokens — single source of truth.
+//
+// Every token is emitted twice:
+//   1. As a CSS custom property on :root, so it cascades into OOTB SharePoint
+//      web parts that the customizer can't touch from SCSS.
+//   2. As an SCSS variable, so component .module.scss files can consume tokens
+//      at compile time without going through var(--phil-...).
+//
+// If you need a new color/spacing/radius, add it here first, then reference
+// the new token. Do not hard-code hex values, fonts, or px scales anywhere else.
+
+// ---------------------------------------------------------------------------
+// Colors
+// ---------------------------------------------------------------------------
+
+$phil-red:        #F9423A;
+$phil-red-tint:   #fef0ee;
+$phil-gold:       #F68B33;
+$phil-blue:       #00AEEF;
+$phil-black:      #1a1a1a;
+
+$phil-gray-900:   #323130;
+$phil-gray-600:   #605e5c;
+$phil-gray-400:   #8a8886;
+$phil-gray-200:   #e1dfdd;
+$phil-gray-100:   #edebe9;
+$phil-gray-50:    #faf9f8;
+
+$phil-white:      #ffffff;
+
+// ---------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------
+//
+// Barlow Condensed and Montserrat are deployed via SharePoint Brand Center
+// (admin-configured), not bundled in this solution — keeps the customizer
+// CSP-clean and avoids CDN font calls at runtime. Fallbacks are chosen so
+// pages stay readable if Brand Center fonts aren't yet active on a tenant.
+
+$phil-font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+$phil-font-body:    'Montserrat', 'Segoe UI', system-ui, sans-serif;
+
+$phil-eyebrow-letter-spacing: 2px;
+
+// ---------------------------------------------------------------------------
+// Spacing scale (4 / 8 / 12 / 16 / 24 / 32 / 48)
+// ---------------------------------------------------------------------------
+
+$phil-space-1: 4px;
+$phil-space-2: 8px;
+$phil-space-3: 12px;
+$phil-space-4: 16px;
+$phil-space-5: 24px;
+$phil-space-6: 32px;
+$phil-space-7: 48px;
+
+// ---------------------------------------------------------------------------
+// Border-radius scale
+// ---------------------------------------------------------------------------
+
+$phil-radius-sm:   4px;   // inline elements, small badges
+$phil-radius-md:   8px;   // icon backgrounds, small cards
+$phil-radius-lg:   12px;  // cards, tiles, news cards
+$phil-radius-xl:   16px;  // hero, featured content, CTA sections
+$phil-radius-pill: 999px; // pill buttons
+
+// ---------------------------------------------------------------------------
+// CSS custom properties on :root
+// ---------------------------------------------------------------------------
+//
+// These cascade to every element under <html>, including the OOTB SharePoint
+// web parts that don't ingest our SCSS. The customizer injects this whole
+// stylesheet site-wide (Prompt 4) — that's how Hero, News, Quick Links, etc.
+// pick up Phillips brand values without us touching their internal CSS.
+
+:root {
+  --phil-red:        #{$phil-red};
+  --phil-red-tint:   #{$phil-red-tint};
+  --phil-gold:       #{$phil-gold};
+  --phil-blue:       #{$phil-blue};
+  --phil-black:      #{$phil-black};
+
+  --phil-gray-900:   #{$phil-gray-900};
+  --phil-gray-600:   #{$phil-gray-600};
+  --phil-gray-400:   #{$phil-gray-400};
+  --phil-gray-200:   #{$phil-gray-200};
+  --phil-gray-100:   #{$phil-gray-100};
+  --phil-gray-50:    #{$phil-gray-50};
+
+  --phil-white:      #{$phil-white};
+
+  --phil-font-display: #{$phil-font-display};
+  --phil-font-body:    #{$phil-font-body};
+
+  --phil-eyebrow-letter-spacing: #{$phil-eyebrow-letter-spacing};
+
+  --phil-space-1: #{$phil-space-1};
+  --phil-space-2: #{$phil-space-2};
+  --phil-space-3: #{$phil-space-3};
+  --phil-space-4: #{$phil-space-4};
+  --phil-space-5: #{$phil-space-5};
+  --phil-space-6: #{$phil-space-6};
+  --phil-space-7: #{$phil-space-7};
+
+  --phil-radius-sm:   #{$phil-radius-sm};
+  --phil-radius-md:   #{$phil-radius-md};
+  --phil-radius-lg:   #{$phil-radius-lg};
+  --phil-radius-xl:   #{$phil-radius-xl};
+  --phil-radius-pill: #{$phil-radius-pill};
+}

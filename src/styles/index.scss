@@ -1,0 +1,17 @@
+// Phillips Brand stylesheet — entry point.
+//
+// The Application Customizer (Prompt 4) imports this file, compiles it, and
+// injects the result into a single <style id="phil-brand"> tag in <head>.
+// Component .module.scss files can also @import this (or _tokens.scss
+// directly) to get the SCSS variables and mixins at compile time.
+
+@use './tokens';
+@use './mixins';
+
+// Components that need the tokens/mixins should `@use` the same partials
+// directly (e.g. `@use 'src/styles/tokens' as *;`) rather than going through
+// index.scss — that keeps each .module.scss's compile graph minimal.
+
+// Brand override blocks for OOTB SharePoint web parts are added in Prompt 4
+// (./_overrides.scss). Keep this file as the single import surface so
+// downstream consumers don't need to know which partials exist.

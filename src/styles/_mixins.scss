@@ -1,0 +1,45 @@
+// Phillips Brand SCSS mixins.
+//
+// `@use './tokens' as *;` pulls every $phil-* variable into local scope so the
+// mixins below can reference them without namespace prefixes. Consumers don't
+// need to import tokens separately — using a mixin from this file transitively
+// brings the variables along.
+
+@use './tokens' as *;
+
+// ---------------------------------------------------------------------------
+// phil-eyebrow — the small-caps "section label" pattern used above headings.
+// ---------------------------------------------------------------------------
+//
+// Visual: a red 16px-wide × 1.5px-tall horizontal bar, followed by uppercase
+// 9px red text with 2px letter spacing. Used as a programmatic alternative to
+// the `.phil-eyebrow` utility class the customizer exposes globally — reach
+// for the mixin only in component SCSS where applying a global class doesn't
+// fit the markup.
+
+@mixin phil-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: $phil-space-2;
+
+  font-family: $phil-font-body;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: $phil-eyebrow-letter-spacing;
+  text-transform: uppercase;
+  color: $phil-red;
+
+  margin: 0;
+  padding: 0;
+
+  // The red dash. flex-shrink:0 prevents it from collapsing when the eyebrow
+  // sits inside a narrow column next to long text.
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1.5px;
+    background-color: $phil-red;
+    flex-shrink: 0;
+  }
+}
