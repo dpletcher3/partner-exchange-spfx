@@ -36,3 +36,8 @@ desktop.ini
 
 # Claude Code
 .claude/
+
+# Heft build output
+lib-commonjs/
+lib/
+
