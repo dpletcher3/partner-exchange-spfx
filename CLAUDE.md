@@ -99,6 +99,14 @@ Barlow Condensed and Montserrat are loaded via SharePoint Brand Center (admin co
 - **Card pattern:** white background, 0.5px `--phil-gray-200` border, `--phil-radius-lg` corners, no shadow.
 - **Hero pattern:** `--phil-radius-xl` corners, overlay color `rgba(0, 50, 80, 0.35)` for darkening photo backgrounds.
 
+## Known gotchas
+
+- **SPFx ApplicationCustomizers do NOT run on classic site collections** even when individual pages render with modern-looking chrome. The site collection itself must be group-connected (`GroupId != 00000000-0000-0000-0000-000000000000`) for the SPFx extension pipeline to engage. On a classic site, `_spPageContextInfo` is `undefined` on the page, the customaction is silently delivered in the page payload but the component manifest is never resolved, and no amount of correct registration/packaging will make the customizer load.
+  - **`PartnerExchange-DanSandbox` is a classic site collection and is permanently unusable for SPFx extension dev/debug.** Confirmed via `m365 spo site get --url https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox` showing `GroupId: 00000000-0000-0000-0000-000000000000`. Do not try to use it as a target site again.
+  - **Current dev site:** `https://phillipscorp.sharepoint.com/sites/spfx-extension-test` (group-connected team site, SPFx-eligible).
+  - **Always validate the target site type with `m365 spo site get --url <siteUrl>` before deploying** — check `GroupId`. The all-zero GUID is the smoking gun.
+- **The diagnostic banner from Prompt 4 is still in `onInit()`.** [src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts](src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts) currently appends a red `<div id="phil-test-banner">🟥 PARTNER EXCHANGE CUSTOMIZER LOADED 🟥</div>` to `<body>` and logs `[PhilCustomizer] Banner injected, onInit complete`. This was added to prove end-to-end bundle loading on the new dev site and **must be removed before Prompt 5 starts** — the banner is not a product feature, only the brand CSS injection is. Search for `phil-test-banner` and `[PhilCustomizer]` and delete the block (the `TEMPORARY DIAGNOSTIC` comment in the source marks the boundary).
+
 ## How to work in this codebase
 
 - **Every prompt completion in this project ends with a Manual Test section — numbered steps the developer runs to verify the work, written so they could be followed by someone who didn't see the code change. No prompt is considered complete without it.**
@@ -118,6 +126,13 @@ Barlow Condensed and Montserrat are loaded via SharePoint Brand Center (admin co
 - **PRs reference the prompt number** they completed: "Closes Prompt 4 (CSS injection)." (Commit bodies say "Completes Prompt N"; PR titles/descriptions say "Closes Prompt N" — both can be true for the PR that lands a prompt's work.)
 - **Don't bypass type errors.** No `@ts-ignore`, no `any`. If TypeScript complains, fix the underlying problem.
 - **Test in the SharePoint Workbench first**, then on a real test site. Workbench catches structural issues; only real sites catch CSP, theme, and OOTB-web-part interaction issues.
+- **Site type validation comes FIRST when SPFx extensions don't load.** Before opening DevTools, inspecting bundles, or auditing manifests for any "extension isn't running" or "bundle isn't loading" symptom, run these three console checks on the affected page:
+  ```js
+  window._spPageContextInfo?.isSPO        // must be true
+  window._spPageContextInfo?.pageItemId   // must be a GUID
+  typeof window.SPClientPlugin            // must be 'undefined' (modern)
+  ```
+  If `isSPO` is `undefined` or `false`, the page is not SPFx-eligible regardless of how correct the package, manifest, or customaction registration is — SharePoint will silently include the customaction in the page payload but never resolve the component manifest because SPFx itself never initialized. This is the **first** thing to check, not the last. Also confirm the underlying site collection with `m365 spo site get --url <siteUrl>` and verify `GroupId` is not `00000000-0000-0000-0000-000000000000` (the all-zero GUID indicates a classic, non-group-connected site, which doesn't run SPFx extensions even when pages look modern).
 
 ## Graduation readiness
 
@@ -142,4 +157,24 @@ To be filled in during Phase 3 as prompts complete and behavior is confirmed. Fo
   - Needed in Prompt 4 for `m365 spo customaction add --clientSideComponentId ...` and in CI / deployment scripts
 - Entry point class: `PhillipsBrandApplicationCustomizer` (default export, extends `BaseApplicationCustomizer<Record<string, never>>`)
 - Customizer takes no configurable properties — `ClientSideComponentProperties` is `{}` in both `sharepoint/assets/elements.xml` and `sharepoint/assets/ClientSideInstance.xml`
-- Debug URL: `https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox/SitePages/Home.aspx` (set in [config/serve.json](config/serve.json))
+- Debug URL: `https://phillipscorp.sharepoint.com/sites/spfx-extension-test/SitePages/Home.aspx` (migrated from `PartnerExchange-DanSandbox` on 2026-05-20 after that site was confirmed unusable for SPFx — see "Known gotchas"). Note: [config/serve.json](config/serve.json) and several `PROMPTS.md` references still hard-code the old URL and need updating in a separate non-docs commit.
+
+### Prompt 4 — Brand CSS injection (working, banner still in place)
+
+- **Status:** Working end-to-end on `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`. Confirmed via the diagnostic banner on `SitePages/Home.aspx` and `SitePages/testpage.aspx`. `getComputedStyle(document.documentElement).getPropertyValue('--phil-red')` returns `" #F9423A"`; `<style id="phil-brand">` is present in `<head>`.
+- **Solution version deployed:** `1.0.0.1` (the bump from `1.0.0.0` was required so SharePoint would recognize the new bundle instead of serving cached metadata for the old hash)
+- **Bundle hash:** `4fd914910a7d83b565a9` (file in `ClientSideAssets/` is `phillips-brand-application-customizer_4fd914910a7d83b565a9.js`)
+- **App ID:** `7b2e6ef9-8db7-41cd-9660-3aee7feb8f63` (matches `ProductID` in `AppManifest.xml`)
+- **Installed at:** `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`
+- **CSS approach:** SCSS compiled at build time into a string export (`src/extensions/phillipsBrand/generated/phillipsBrandCss.ts`, gitignored), injected manually via `document.createElement('style')` with `id="phil-brand"`. The sp-css-loader auto-injection path was abandoned because it routes CSS through `window.__themeState__.loadStyles`, which silently drops non-themable `:root` declarations. Full diagnostic in commit `cfdce55`.
+- **Diagnostic banner still in `onInit()`** — see "Known gotchas" for the removal checklist before Prompt 5.
+
+## Lessons learned
+
+Add insights here as they emerge from the build process — things that took time to figure out and shouldn't have to be rediscovered.
+
+### Validate the target site type *before* deep-diving the code
+
+The Prompt 4 CSS-injection failure consumed a long debugging session: I audited the build pipeline, manifest schema, package layout, feature XML, ClientSideAssets folder, sp-css-loader output, and runtime CSS injection — all of which were correct. The actual cause was that the original target site (`PartnerExchange-DanSandbox`) is a classic site collection, and SPFx extensions simply don't run on classic sites. The customaction got registered cleanly, SharePoint dutifully shipped it in the page payload, and then the SPFx runtime — which never initialized on that page — never resolved the component manifest. Symptom: zero network requests for the bundle, zero console output, registration looks perfect.
+
+**Rule of thumb for next time:** when SPFx behavior is inexplicable, spin up a fresh modern team site (`m365 spo site add --type TeamSite --url https://<tenant>.sharepoint.com/sites/<name> --title <name> --alias <name>`), deploy the app there, and see if the symptom reproduces. This takes ~2 minutes and definitively answers "is the code the problem or is the target site the problem." Make it one of the first diagnostic moves, not the last. The "Site type validation" bullet in "How to work in this codebase" is the inlined version of this principle.
