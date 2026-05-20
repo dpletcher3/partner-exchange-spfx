@@ -1,14 +1,13 @@
 // Phillips Brand stylesheet — entry point.
 //
-// The Application Customizer (Prompt 4) does a side-effect import of this
-// file from TypeScript:
+// Compiled at build time by `scripts/build-css-string.mjs`, which writes the
+// resulting CSS into `src/extensions/phillipsBrand/generated/phillipsBrandCss.ts`
+// as a string export. The Application Customizer then imports that string and
+// injects it manually via `document.createElement('style')` with `id="phil-brand"`.
 //
-//   import '../../styles/index.global.scss';
-//
-// The `.global.scss` extension matches the heft-sass-plugin's
-// `nonModuleFileExtensions` pattern, so the compiled CSS is auto-injected
-// into <head> by sp-css-loader at runtime instead of being treated as a
-// CSS Module (which would hash class names).
+// This bypasses sp-css-loader's themable-styles pipeline, which silently drops
+// non-themable `:root` declarations on modern SharePoint Online (see commit
+// log for Prompt 4 attempt 1 for the diagnostic trace).
 //
 // Component .module.scss files (in Prompts 5-6) consume tokens and mixins
 // via `@use 'src/styles/tokens' as *;` directly — they don't go through
