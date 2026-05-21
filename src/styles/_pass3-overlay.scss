@@ -57,9 +57,44 @@
 }
 
 [data-automation-id="grid-layout"] .ms-List-cell {
+  // Pass 3.4 — neutralize Fluent List virtualization.
+  // The List JS sets inline `position: absolute; left: Npx; top: Npx`
+  // (sometimes `transform: translateY(Npx)`) on each cell to pin it into
+  // a virtualized grid. With Pass 3.3's `position: static` alone, the cells
+  // dropped out of the absolute flow but the surviving inline `left`/`top`
+  // values still offset them, causing overlap. We blow away the whole
+  // positioning chain (`left`, `top`, `transform`) so the cells become
+  // ordinary flex-wrap children of the surface/page parent.
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
   width: auto !important;
   min-width: 0 !important;
-  position: static !important;
+  // 0 0 auto: don't grow, don't shrink, size to the child's natural width.
+  flex: 0 0 auto !important;
+  // Spacing between chips. `gap` on the grid-layout works when cells are
+  // direct flex children, but if a surface/page intermediate absorbs the
+  // gap, the margins below take over. Belt-and-suspenders — at most one
+  // mechanism contributes the 8px effective spacing.
+  margin-right: var(--phil-space-2) !important;
+  margin-bottom: var(--phil-space-2) !important;
+}
+
+// Pass 3.4 — intermediate flex container.
+// Fluent List nests cells inside `.ms-List-surface > .ms-List-page` (the
+// exact one varies by Fluent version). Whichever is the real parent of the
+// cells needs to be a flex-wrap row so the now-static cells flow. The other
+// becomes a single-child flex container, which is a no-op. `height: auto`
+// overrides the explicit pixel height Fluent sets for the virtualization
+// viewport — without that, the list would clip to its old fixed height even
+// after the cells expanded into multiple rows.
+[data-automation-id="grid-layout"] .ms-List-surface,
+[data-automation-id="grid-layout"] .ms-List-page {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  position: relative !important;
+  height: auto !important;
 }
 
 // Pill outer: white surface, gray border, sized to content.
@@ -101,7 +136,10 @@ a.ButtonCard:hover {
   // Tight vertical (4px) for a flat chip; generous horizontal (16px) so
   // labels have breathing room on each side.
   padding: var(--phil-space-1) var(--phil-space-4) !important;
-  width: auto !important;
+  // Pass 3.4: `fit-content` is more assertive than `width: auto` against
+  // SharePoint's inline-width cascade — the inner container shrinks to the
+  // natural width of (icon + gap + label) rather than expanding to fill.
+  width: fit-content !important;
   min-width: 0 !important;
 }
 
@@ -114,7 +152,14 @@ a.ButtonCard:hover {
   overflow: visible !important;
   text-overflow: clip !important;
   width: auto !important;
+  // Pass 3.4: SharePoint sets explicit max-width on the textArea that
+  // caused truncation to "CO" / "MY" / "PAYLOCIT" before. Override to none.
+  max-width: none !important;
   min-width: 0 !important;
+  // Pass 3.4: textArea is a flex child of the inner button-card row; its
+  // default `flex: 1 1 0` would let it shrink under pressure. 0 0 auto
+  // pins it to its content width.
+  flex: 0 0 auto !important;
 }
 
 // Text color (carried from Pass 3.2).
