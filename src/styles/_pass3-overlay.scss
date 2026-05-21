@@ -51,9 +51,45 @@
 // equal-width columns. Safe here because Quick Links lists are small
 // (typically <20 items) — virtualization isn't load-bearing.
 [data-automation-id="grid-layout"] {
+  // Pass 3.5: force grid-layout to fill its parent. Without this, SP's
+  // inline width pegged grid-layout at ~81px even after Pass 3.3's
+  // flex-wrap rewire, because the FluentProvider chain above it
+  // (display: contents) was transparently passing through a narrow width
+  // from an .ms-FocusZone ancestor (~71px). See the .ms-FocusZone +
+  // ancestor :has() rules below for the matching ancestor expansion.
+  width: 100% !important;
+  min-width: 0 !important;
   display: flex !important;
   flex-wrap: wrap !important;
   gap: var(--phil-space-2) !important;
+}
+
+// Pass 3.5: expand the Quick Links ancestor chain to fill the column.
+// `:has()` is GA on all of SP Online's supported browsers (Chrome/Edge
+// 105+, Safari 15.4+, Firefox 121+). Each selector targets a specific
+// ancestor level above grid-layout — together they walk three levels up
+// and force every constraining wrapper to 100% width.
+
+// The .ms-FocusZone Fluent puts around Quick Links was the primary
+// choke point in the diagnosed DOM (~71px). Scoped to FocusZones that
+// actually contain a grid-layout so we don't widen unrelated FocusZones
+// elsewhere on the page.
+.ms-FocusZone:has([data-automation-id="grid-layout"]) {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+// Intermediate DIV wrappers between grid-layout and the FocusZone.
+// Fluent 9's FluentProvider chain produces several display:contents
+// layers interleaved with plain DIVs; the first two selectors catch the
+// direct parent and grandparent of grid-layout, the third catches any
+// element whose direct child is a FocusZone immediately above
+// grid-layout. Whichever of the three matches in the rendered DOM gets
+// expanded — others are simply unmatched no-ops.
+*:has(> [data-automation-id="grid-layout"]),
+*:has(> * > [data-automation-id="grid-layout"]),
+*:has(> .ms-FocusZone > [data-automation-id="grid-layout"]) {
+  width: 100% !important;
 }
 
 [data-automation-id="grid-layout"] .ms-List-cell {
