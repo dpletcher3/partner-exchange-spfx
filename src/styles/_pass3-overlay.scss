@@ -12,7 +12,14 @@
 
 // ---------- Section / web part titles ----------
 // SharePoint default: thin Segoe UI title, no underline. Overridden to the
-// Phillips display face with a red baseline.
+// Phillips display face with a red baseline on the inner title text only.
+//
+// Pass 3.2 fix: the red underline used to apply to all three selectors below,
+// but `webPartHeader` is usually a *wrapper* that contains `webPartTitleReadMode`
+// (the actual text node). Applying border-bottom to both rendered a double
+// underline — one under the wrapper's bottom edge, one under the inner text.
+// Typography stays on all three; the underline is now scoped to the inner
+// text-bearing elements only.
 [data-automation-id="webPartHeader"],
 [data-automation-id="webPartTitleReadMode"],
 [data-automation-id="captionElement"] {
@@ -22,39 +29,43 @@
   letter-spacing: 0.02em !important;
   text-transform: uppercase !important;
   color: var(--phil-black) !important;
+  margin-bottom: var(--phil-space-4) !important;
+}
+
+[data-automation-id="webPartTitleReadMode"],
+[data-automation-id="captionElement"] {
   padding-bottom: var(--phil-space-2) !important;
   border-bottom: 3px solid var(--phil-red) !important;
-  margin-bottom: var(--phil-space-4) !important;
   display: inline-block !important;
 }
 
-// ---------- Quick Links: pill-shaped tiles, Phillips red ----------
-// SharePoint default: white rectangular ButtonCard with subtle border.
-// Brand override: full-pill red tile, white text + icons, hover darkens.
+// ---------- Quick Links: quiet neutral pills ----------
+// Pass 3.2 redirect: Pass 3.1 made these full-red and oversized. The reference
+// design treats Quick Links as quiet navigational pills — red is reserved for
+// section-header accents and the wordmark. Tiles are now Fluent-style neutral
+// pills (white surface, gray-200 border, black text/icon) at SharePoint's
+// natural size. No padding/sizing rules — let SharePoint's own sizing stand.
 .ButtonCard,
 a.ButtonCard {
   border-radius: var(--phil-radius-pill) !important;
-  background-color: var(--phil-red) !important;
-  border: none !important;
-  // Decorative shadow tints — not promoted to tokens since they're
-  // hover/elevation effects rather than brand values.
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
+  background-color: var(--phil-white) !important;
+  // --phil-gray-200 is #e1dfdd, documented in CLAUDE.md as the "Borders"
+  // token. Same value the Fluent neutral-default uses.
+  border: 1px solid var(--phil-gray-200) !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease !important;
   overflow: hidden !important;
 }
 
 .ButtonCard:hover,
 a.ButtonCard:hover {
-  background-color: var(--phil-black) !important;
-  transform: translateY(-1px) !important;
-  // Shadow color is `--phil-red` at 25% alpha (#F9423A → rgba(249,66,58,0.25)).
-  // Kept inline; promote to a token if the same alpha mix appears elsewhere.
-  box-shadow: 0 4px 12px rgba(249, 66, 58, 0.25) !important;
+  // Quiet hover: light-gray surface, no color flip, no transform.
+  background-color: var(--phil-gray-100) !important;
 }
 
 .ButtonCard [data-automation-id="button-card"],
 .ButtonCard [class*="textArea"] {
-  color: var(--phil-white) !important;
+  color: var(--phil-black) !important;
 }
 
 .ButtonCard [class*="textArea"] *,
@@ -64,14 +75,14 @@ a.ButtonCard:hover {
   font-weight: 600 !important;
   letter-spacing: 0.03em !important;
   text-transform: uppercase !important;
-  color: var(--phil-white) !important;
+  color: var(--phil-black) !important;
 }
 
 .ButtonCard [class*="thumbnail"] svg,
 .ButtonCard [class*="thumbnail"] i,
 .ButtonCard [class*="thumbnail"] * {
-  color: var(--phil-white) !important;
-  fill: var(--phil-white) !important;
+  color: var(--phil-black) !important;
+  fill: var(--phil-black) !important;
 }
 
 // ---------- Hero: "Learn more" CTA ----------
