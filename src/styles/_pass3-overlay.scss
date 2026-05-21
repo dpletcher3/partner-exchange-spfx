@@ -11,15 +11,16 @@
 @use './tokens' as *;
 
 // ---------- Section / web part titles ----------
-// SharePoint default: thin Segoe UI title, no underline. Overridden to the
-// Phillips display face with a red baseline on the inner title text only.
+// SharePoint default: thin Segoe UI title. Brand override: Phillips display
+// face in uppercase black, no decoration.
 //
-// Pass 3.2 fix: the red underline used to apply to all three selectors below,
-// but `webPartHeader` is usually a *wrapper* that contains `webPartTitleReadMode`
-// (the actual text node). Applying border-bottom to both rendered a double
-// underline — one under the wrapper's bottom edge, one under the inner text.
-// Typography stays on all three; the underline is now scoped to the inner
-// text-bearing elements only.
+// Pass 3.3 redirect: the red underline introduced in Pass 3 (and split off
+// the wrapper in Pass 3.2 to fix the double-underline) is removed entirely.
+// On the live design it read as a section divider rather than a wordmark
+// accent — red is reserved for the wordmark and brand accents only.
+// `display: inline-block` and `padding-bottom` are gone with it (they only
+// existed to constrain the underline width); `margin-bottom` stays for
+// vertical rhythm between the title and the web part body.
 [data-automation-id="webPartHeader"],
 [data-automation-id="webPartTitleReadMode"],
 [data-automation-id="captionElement"] {
@@ -32,28 +33,50 @@
   margin-bottom: var(--phil-space-4) !important;
 }
 
-[data-automation-id="webPartTitleReadMode"],
-[data-automation-id="captionElement"] {
-  padding-bottom: var(--phil-space-2) !important;
-  border-bottom: 3px solid var(--phil-red) !important;
-  display: inline-block !important;
+// ---------- Quick Links: flowing pill chips ----------
+// Pass 3.3 layout: each pill is now a "filter chip" — icon on the left,
+// label to the right on a single line, the pill itself sized to its label.
+// SharePoint normally enforces a fixed-column CSS grid that clipped long
+// labels like "MyCDT (Competency Development Tool)". We override the grid
+// container to flex-wrap, the cells to size to content, and the pill itself
+// to fit its children.
+//
+// Carried from Pass 3.2: white surface, --phil-gray-200 border,
+// --phil-black text + icon, --phil-radius-pill, no box-shadow,
+// --phil-gray-100 hover background, no transform.
+
+// Grid container: replace SharePoint's CSS-grid track with a natural
+// flex-wrap row. `position: static` on the Fluent List cells defeats the
+// virtualization absolute-positioning that would otherwise pin cells into
+// equal-width columns. Safe here because Quick Links lists are small
+// (typically <20 items) — virtualization isn't load-bearing.
+[data-automation-id="grid-layout"] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: var(--phil-space-2) !important;
 }
 
-// ---------- Quick Links: quiet neutral pills ----------
-// Pass 3.2 redirect: Pass 3.1 made these full-red and oversized. The reference
-// design treats Quick Links as quiet navigational pills — red is reserved for
-// section-header accents and the wordmark. Tiles are now Fluent-style neutral
-// pills (white surface, gray-200 border, black text/icon) at SharePoint's
-// natural size. No padding/sizing rules — let SharePoint's own sizing stand.
+[data-automation-id="grid-layout"] .ms-List-cell {
+  width: auto !important;
+  min-width: 0 !important;
+  position: static !important;
+}
+
+// Pill outer: white surface, gray border, sized to content.
 .ButtonCard,
 a.ButtonCard {
   border-radius: var(--phil-radius-pill) !important;
   background-color: var(--phil-white) !important;
-  // --phil-gray-200 is #e1dfdd, documented in CLAUDE.md as the "Borders"
-  // token. Same value the Fluent neutral-default uses.
+  // --phil-gray-200 (#e1dfdd) is the "Borders" token per CLAUDE.md.
   border: 1px solid var(--phil-gray-200) !important;
   box-shadow: none !important;
   transition: background-color 0.15s ease !important;
+  // Pass 3.3 sizing: shrink to fit the label rather than fill the grid cell.
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  // `overflow: hidden` keeps the pill's rounded edges crisp against the
+  // inner content; with `width: auto` the label never needs to spill.
   overflow: hidden !important;
 }
 
@@ -63,11 +86,45 @@ a.ButtonCard:hover {
   background-color: var(--phil-gray-100) !important;
 }
 
+// Pill inner container: flex row that holds the thumbnail (left) and the
+// text area (right). SharePoint may use either [data-automation-id="button-card"]
+// or a [class*="content"] descendant as the actual parent of the thumbnail +
+// textArea pair, so the rule applies to both. Whichever is the real parent
+// lays out its two children; the other becomes a single-child flex container,
+// which is a no-op.
+.ButtonCard [data-automation-id="button-card"],
+.ButtonCard [class*="content"] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: var(--phil-space-2) !important;
+  // Tight vertical (4px) for a flat chip; generous horizontal (16px) so
+  // labels have breathing room on each side.
+  padding: var(--phil-space-1) var(--phil-space-4) !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+// Text container + title: single line, no truncation, size to content.
+// `text-overflow: clip` and `overflow: visible` override SharePoint's
+// default ellipsis truncation that would clip long labels.
+.ButtonCard [class*="textArea"],
+.ButtonCard [data-automation-id="quick-links-item-title"] {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+// Text color (carried from Pass 3.2).
 .ButtonCard [data-automation-id="button-card"],
 .ButtonCard [class*="textArea"] {
   color: var(--phil-black) !important;
 }
 
+// Label typography (carried from Pass 3.2) + Pass 3.3 nowrap on every
+// nested text node so child spans don't reintroduce wrapping.
 .ButtonCard [class*="textArea"] *,
 .ButtonCard [data-automation-id="quick-links-item-title"],
 .ButtonCard [class*="textArea"] span {
@@ -76,8 +133,10 @@ a.ButtonCard:hover {
   letter-spacing: 0.03em !important;
   text-transform: uppercase !important;
   color: var(--phil-black) !important;
+  white-space: nowrap !important;
 }
 
+// Icons (carried from Pass 3.2).
 .ButtonCard [class*="thumbnail"] svg,
 .ButtonCard [class*="thumbnail"] i,
 .ButtonCard [class*="thumbnail"] * {
