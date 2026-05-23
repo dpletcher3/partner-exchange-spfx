@@ -10,7 +10,7 @@ Partner Exchange SPFx is the custom SharePoint Framework solution that gives the
 - **SPFx generator:** 1.23.x (Yeoman generator package. Verify with `npm view @microsoft/generator-sharepoint version`)
 - **React:** 17 (SPFx 1.23.x still pins React 17 — do not upgrade to 18 without confirming SPFx-side support)
 - **TypeScript:** 5.x (introduced by SPFx 1.21+, present here via SPFx 1.23.x's bundled rush-stack-compiler-5.x). *Bumped from 4.7.x alongside the runtime bump on 2026-05-20 — single coordinated migration.*
-- **UI library:** Fluent UI v9 (`@fluentui/react-components`)
+- **UI library:** Fluent UI v8 (`@fluentui/react`) is the only Fluent package currently installed (the Application Customizer does no React rendering today, so nothing is actually using it yet). Fluent UI v9 (`@fluentui/react-components`) is the intended target for any new React-rendered components (e.g., the planned Personalized Hero web part) and will be added when the first component needs it — do not assume it is installed today.
 - **Node:** 22 LTS, pinned via `.nvmrc`. *Bumped from 18 on 2026-05-20 — SPFx 1.21+ requires Node 22 LTS; staying on 18 would have stranded us on the unsupported SPFx 1.20.x line.*
 - **Styling:** SCSS modules per component, with CSS custom properties for brand tokens defined once in `src/styles/_tokens.scss` and imported by both the customizer and the web part
 - **Solution packaging:** one `.sppkg` containing both the Application Customizer and the Personalized Hero web part
@@ -105,7 +105,7 @@ Barlow Condensed and Montserrat are loaded via SharePoint Brand Center (admin co
   - **`PartnerExchange-DanSandbox` is a classic site collection and is permanently unusable for SPFx extension dev/debug.** Confirmed via `m365 spo site get --url https://phillipscorp.sharepoint.com/sites/PartnerExchange-DanSandbox` showing `GroupId: 00000000-0000-0000-0000-000000000000`. Do not try to use it as a target site again.
   - **Current dev site:** `https://phillipscorp.sharepoint.com/sites/spfx-extension-test` (group-connected team site, SPFx-eligible).
   - **Always validate the target site type with `m365 spo site get --url <siteUrl>` before deploying** — check `GroupId`. The all-zero GUID is the smoking gun.
-- **The diagnostic banner from Prompt 4 is still in `onInit()`.** [src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts](src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts) currently appends a red `<div id="phil-test-banner">🟥 PARTNER EXCHANGE CUSTOMIZER LOADED 🟥</div>` to `<body>` and logs `[PhilCustomizer] Banner injected, onInit complete`. This was added to prove end-to-end bundle loading on the new dev site and **must be removed before Prompt 5 starts** — the banner is not a product feature, only the brand CSS injection is. Search for `phil-test-banner` and `[PhilCustomizer]` and delete the block (the `TEMPORARY DIAGNOSTIC` comment in the source marks the boundary).
+- **The diagnostic banner from Prompt 4 has been removed.** Historical note: during Prompt 4 the customizer briefly appended a red `<div id="phil-test-banner">🟥 PARTNER EXCHANGE CUSTOMIZER LOADED 🟥</div>` to `<body>` (plus a `[PhilCustomizer] Banner injected, onInit complete` console log) to prove end-to-end bundle loading on the new dev site. That block has since been stripped — [src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts](src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.ts) now only injects the brand `<style id="phil-brand">` tag. If a future change reintroduces a similar banner for diagnostics, the same removal discipline applies: it is not a product feature and must be excised before the change ships.
 
 ## How to work in this codebase
 
@@ -159,15 +159,14 @@ To be filled in during Phase 3 as prompts complete and behavior is confirmed. Fo
 - Customizer takes no configurable properties — `ClientSideComponentProperties` is `{}` in both `sharepoint/assets/elements.xml` and `sharepoint/assets/ClientSideInstance.xml`
 - Debug URL: `https://phillipscorp.sharepoint.com/sites/spfx-extension-test/SitePages/Home.aspx` (migrated from `PartnerExchange-DanSandbox` on 2026-05-20 after that site was confirmed unusable for SPFx — see "Known gotchas"). Note: [config/serve.json](config/serve.json) and several `PROMPTS.md` references still hard-code the old URL and need updating in a separate non-docs commit.
 
-### Prompt 4 — Brand CSS injection (working, banner still in place)
+### Prompt 4 — Brand CSS injection (working, banner removed)
 
-- **Status:** Working end-to-end on `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`. Confirmed via the diagnostic banner on `SitePages/Home.aspx` and `SitePages/testpage.aspx`. `getComputedStyle(document.documentElement).getPropertyValue('--phil-red')` returns `" #F9423A"`; `<style id="phil-brand">` is present in `<head>`.
-- **Solution version deployed:** `1.0.0.1` (the bump from `1.0.0.0` was required so SharePoint would recognize the new bundle instead of serving cached metadata for the old hash)
-- **Bundle hash:** `4fd914910a7d83b565a9` (file in `ClientSideAssets/` is `phillips-brand-application-customizer_4fd914910a7d83b565a9.js`)
-- **App ID:** `7b2e6ef9-8db7-41cd-9660-3aee7feb8f63` (matches `ProductID` in `AppManifest.xml`)
-- **Installed at:** `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`
+- **Status:** Working end-to-end on `https://phillipscorp.sharepoint.com/sites/spfx-extension-test`. Originally confirmed via a temporary diagnostic banner on `SitePages/Home.aspx` and `SitePages/testpage.aspx` (since removed); the banner-free runtime check is `getComputedStyle(document.documentElement).getPropertyValue('--phil-red')` returning `" #F9423A"` and `<style id="phil-brand">` being present in `<head>`.
+- **Solution version:** Currently `1.0.0.9` in [config/package-solution.json](config/package-solution.json). The initial `1.0.0.0` → `1.0.0.1` bump during Prompt 4 was required so SharePoint would recognize the new bundle instead of serving cached metadata for the old hash; every subsequent .sppkg upload to the App Catalog continues to require a version bump for the same cache-busting reason.
+- **App ID:** `7b2e6ef9-8db7-41cd-9660-3aee7feb8f63` (matches `ProductID` in `AppManifest.xml` and the `solution.id` in [config/package-solution.json](config/package-solution.json)).
+- **Installed at:** `https://phillipscorp.sharepoint.com/sites/spfx-extension-test` plus the five I01 sandbox sites (`PartnerExchange-Sandbox`, `-OurCulture`, `-OurPartners`, `-Dashboard`, `-TheHub`) — installed and customaction-registered via `scripts/i01-foundation/install-customizer-app.ps1` and `scripts/i01-foundation/register-customizer.ps1` in the `partner-exchange-provisioning` repo.
 - **CSS approach:** SCSS compiled at build time into a string export (`src/extensions/phillipsBrand/generated/phillipsBrandCss.ts`, gitignored), injected manually via `document.createElement('style')` with `id="phil-brand"`. The sp-css-loader auto-injection path was abandoned because it routes CSS through `window.__themeState__.loadStyles`, which silently drops non-themable `:root` declarations. Full diagnostic in commit `cfdce55`.
-- **Diagnostic banner still in `onInit()`** — see "Known gotchas" for the removal checklist before Prompt 5.
+- **Diagnostic banner:** Removed — `onInit()` now only invokes `injectBrandStyles()`. See "Known gotchas" for the historical record.
 
 ## Lessons learned
 
