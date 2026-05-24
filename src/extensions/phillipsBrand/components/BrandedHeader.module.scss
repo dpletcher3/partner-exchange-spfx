@@ -3,18 +3,88 @@
 .brandedHeader {
   width: 100%;
   height: 80px;
-  background-color: $phil-red;
+  background-color: $phil-white;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 0 $phil-space-5;
   box-sizing: border-box;
+  border-bottom: 1px solid $phil-gray-200;
+  font-family: $phil-font-display;
 }
 
-.placeholder {
-  font-family: $phil-font-display;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+.logoRegion {
+  display: flex;
+  align-items: center;
+  gap: $phil-space-3;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: $phil-white;
+  color: $phil-red;
+  border-left: 1px solid $phil-gray-200;
+  padding-left: $phil-space-3;
+}
+
+.navRegion {
+  display: flex;
+  align-items: center;
+  gap: $phil-space-5;
+  // Push nav to the right of the logo region.
+  margin-left: auto;
+  height: 100%;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 $phil-space-2;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $phil-black;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $phil-red;
+  }
+}
+
+.active {
+  // Red underline beneath the active nav item.
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: $phil-space-2;
+    left: $phil-space-2;
+    right: $phil-space-2;
+    height: 2px;
+    background-color: $phil-red;
+  }
+}
+
+.skeleton {
+  width: 80px;
+  height: 12px;
+  background-color: $phil-gray-100;
+  border-radius: $phil-radius-sm;
+
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }

@@ -213,3 +213,21 @@ body,
 .ms-font-l {
   font-family: var(--phil-font-body) !important;
 }
+
+// ---------- Hide SharePoint site-header chrome (covered by BrandedHeader) ----------
+// The site-header container wraps BOTH SP's hub navigation row and the site
+// title/admin row (Documents / Pages / Site contents / Edit). Our BrandedHeader
+// renders into the Top placeholder above this container, so the whole thing
+// becomes visual redundancy.
+//
+// Targeting both #spSiteHeader (the documented id) and
+// [data-sp-feature-tag="Site header host"] (the documented feature-tag attr)
+// gives redundancy — if Microsoft renames either, the other still catches it.
+//
+// Iter 2c shipped with [data-automation-id="SiteHeader"], which didn't match
+// anything — the real attribute is `data-automationid` (one word, no hyphen).
+// Fixed in 2c.1 by switching to the wrapper id + feature-tag selectors above.
+#spSiteHeader,
+[data-sp-feature-tag="Site header host"] {
+  display: none !important;
+}

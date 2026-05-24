@@ -67,7 +67,7 @@ export default class PhillipsBrandApplicationCustomizer
 
     if (this._topPlaceholder.domElement) {
       ReactDOM.render(
-        React.createElement(BrandedHeader),
+        React.createElement(BrandedHeader, { context: this.context }),
         this._topPlaceholder.domElement
       );
     }
