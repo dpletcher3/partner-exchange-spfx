@@ -203,6 +203,26 @@ a.ButtonCard:hover {
   color: var(--phil-gray-600) !important;
 }
 
+// ---------- News web part cards: rounded corners ----------
+// Modern aesthetic across all News rollups in the portal. Applies to all
+// News layouts (Hub News, Top story, List, Side-by-side, Carousel, Tiles).
+// Radius: --phil-radius-xl (16px) per design discussion.
+//
+// Three candidate selectors are unioned because SharePoint's News web part
+// renders different DOM per layout, and the project has hit the
+// data-automation-id vs data-automationid spelling split before (see 2c.1).
+// The class-name pattern catches CSS-module-hashed names like
+// `newsArticleCard-abc123`. `overflow: hidden` is load-bearing — without it,
+// the inner thumbnail spills outside the rounded corner.
+[data-automationid="NewsArticleCard"],
+[data-automationid="newsArticleCard"],
+[data-automation-id="NewsArticleCard"],
+[data-automation-id="newsArticleCard"],
+[class*="newsArticleCard-"] {
+  border-radius: var(--phil-radius-xl) !important;
+  overflow: hidden !important;
+}
+
 // ---------- Global body font ----------
 // SharePoint defaults `<body>` and the Fluent .ms-font-* utilities to Segoe UI.
 // Override to the Phillips body face so non-web-part chrome (headers,
@@ -215,19 +235,21 @@ body,
 }
 
 // ---------- Hide SharePoint site-header chrome (covered by BrandedHeader) ----------
-// The site-header container wraps BOTH SP's hub navigation row and the site
+// Targets the wrapper containing BOTH the SP hub navigation row AND the site
 // title/admin row (Documents / Pages / Site contents / Edit). Our BrandedHeader
-// renders into the Top placeholder above this container, so the whole thing
-// becomes visual redundancy.
+// renders into the Top placeholder above, making this chrome redundant.
 //
-// Targeting both #spSiteHeader (the documented id) and
-// [data-sp-feature-tag="Site header host"] (the documented feature-tag attr)
-// gives redundancy — if Microsoft renames either, the other still catches it.
+// The previous iteration also included [data-sp-feature-tag="Site header host"]
+// as a defensive fallback. That selector turned out to be too broad — the
+// feature-tag attribute is used on many SP feature hosts beyond the site
+// header, including panels, callouts, and dialogs. The fallback caused
+// transparent backgrounds on the list New Item form, web part property pane,
+// and other dialog surfaces.
 //
-// Iter 2c shipped with [data-automation-id="SiteHeader"], which didn't match
-// anything — the real attribute is `data-automationid` (one word, no hyphen).
-// Fixed in 2c.1 by switching to the wrapper id + feature-tag selectors above.
-#spSiteHeader,
-[data-sp-feature-tag="Site header host"] {
+// Lesson: defensive fallback selectors should be MORE specific than the
+// primary, not broader. #spSiteHeader has been stable across SharePoint
+// versions for years; if Microsoft ever renames it, we detect the regression
+// visually and patch.
+#spSiteHeader {
   display: none !important;
 }

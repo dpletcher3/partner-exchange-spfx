@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { ApplicationCustomizerContext } from '@microsoft/sp-application-base';
 import styles from './BrandedHeader.module.scss';
@@ -116,36 +115,46 @@ export const BrandedHeader: React.FC<IBrandedHeaderProps> = (props) => {
 
   const currentUrl = window.location.href;
 
+  // No FluentProvider wrapper: this component renders only plain HTML elements
+  // styled by CSS modules — no Fluent v9 components used. Mounting a v9
+  // FluentProvider here was load-bearing for nothing AND was actively breaking
+  // SharePoint's own portaled v9 panels (New Item form, web part property
+  // panes, Site Information, Highlighted Content config) because SP's panels
+  // resolve their --colorNeutralBackground1 theme token via a `fui-FluentProvider#`
+  // class that collides when a second FluentProvider mounts on the page (see
+  // microsoft/fluentui#23821, SharePoint/sp-dev-docs#9847). Compounded by
+  // applyStylesToPortals=true (the v9 default), which leaks our provider's
+  // variables into SP's panel portals. Net effect: panels paint
+  // `background-color: var(--colorNeutralBackground1)` with no value resolved
+  // → transparent surface, page bleeds through. Removed in Iter 2c.3.
   return (
-    <FluentProvider theme={webLightTheme}>
-      <div className={styles.brandedHeader}>
-        <div className={styles.logoRegion}>
-          <img src={LOGO_DATA_URI} className={styles.logo} alt="Phillips Corporation" />
-          <div className={styles.subtitle}>{SUBTITLE}</div>
-        </div>
-        <nav className={styles.navRegion} aria-label="Partner Exchange hub navigation">
-          {loading || !navItems
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className={styles.skeleton} aria-hidden="true" />
-              ))
-            : navItems.map((item) => {
-                const active = isNavItemActive(item.SimpleUrl, currentUrl);
-                const className = active
-                  ? `${styles.navItem} ${styles.active}`
-                  : styles.navItem;
-                return (
-                  <a
-                    key={item.SimpleUrl}
-                    href={item.SimpleUrl}
-                    className={className}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {item.Title}
-                  </a>
-                );
-              })}
-        </nav>
+    <div className={styles.brandedHeader}>
+      <div className={styles.logoRegion}>
+        <img src={LOGO_DATA_URI} className={styles.logo} alt="Phillips Corporation" />
+        <div className={styles.subtitle}>{SUBTITLE}</div>
       </div>
-    </FluentProvider>
+      <nav className={styles.navRegion} aria-label="Partner Exchange hub navigation">
+        {loading || !navItems
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={`skeleton-${i}`} className={styles.skeleton} aria-hidden="true" />
+            ))
+          : navItems.map((item) => {
+              const active = isNavItemActive(item.SimpleUrl, currentUrl);
+              const className = active
+                ? `${styles.navItem} ${styles.active}`
+                : styles.navItem;
+              return (
+                <a
+                  key={item.SimpleUrl}
+                  href={item.SimpleUrl}
+                  className={className}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {item.Title}
+                </a>
+              );
+            })}
+      </nav>
+    </div>
   );
 };
