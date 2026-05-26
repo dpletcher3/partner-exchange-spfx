@@ -1,0 +1,115 @@
+@use '../../../styles/tokens' as *;
+
+// Section surface: cards float on a subtle gray panel that separates the news
+// section from surrounding page chrome.
+.phillipsNews {
+  background-color: $phil-gray-50;
+  padding: $phil-space-6 $phil-space-5;
+  border-radius: $phil-radius-lg;
+  font-family: $phil-font-body;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $phil-space-3;
+  margin-bottom: $phil-space-5;
+}
+
+.title {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  // Phillips-red 2px underline below the section header.
+  padding-bottom: $phil-space-2;
+  border-bottom: 2px solid $phil-red;
+}
+
+.viewAll {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $phil-gray-600;
+  text-decoration: none;
+
+  &:hover {
+    color: $phil-red;
+  }
+}
+
+// Responsive card grid: auto-fit resolves to 3 columns on desktop, 2 on
+// tablet, 1 on mobile at typical SharePoint canvas widths.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: $phil-space-4;
+}
+
+// Empty + error states share this centered message block.
+.message {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 0.875rem;
+}
+
+.retryButton {
+  margin-top: $phil-space-3;
+  font-family: $phil-font-body;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: $phil-white;
+  background-color: $phil-red;
+  border: none;
+  border-radius: $phil-radius-pill;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+// ---------- Loading skeleton ----------
+// Mirrors the card footprint so the layout doesn't jump when items arrive.
+.skeletonCard {
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  overflow: hidden;
+  background-color: $phil-white;
+}
+
+.skeletonThumb {
+  width: 100%;
+  // 4:3 ratio to match the real card thumbnail.
+  aspect-ratio: 4 / 3;
+  background-color: $phil-gray-100;
+  animation: phil-news-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonBody {
+  padding: 14px 16px 16px;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: $phil-radius-sm;
+  background-color: $phil-gray-100;
+  margin-bottom: $phil-space-2;
+  animation: phil-news-skeleton-pulse 1.5s ease-in-out infinite;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.skeletonLineShort {
+  width: 40%;
+}
+
+@keyframes phil-news-skeleton-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

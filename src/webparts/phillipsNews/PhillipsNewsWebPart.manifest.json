@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "00b0c379-83d7-46e7-8d18-cfc697fb6fec",
+  "alias": "PhillipsNewsWebPart",
+  "componentType": "WebPart",
+
+  // The "*" signifies that the version should be taken from the package.json
+  "version": "*",
+  "manifestVersion": 2,
+
+  // If true, the component can only be installed on sites where Custom Script is allowed.
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Phillips News" },
+      "description": {
+        "default": "Renders branded news cards from the News Repository list, filterable by category and item type."
+      },
+      "officeFabricIconFontName": "News",
+      "properties": {
+        "sectionTitle": "",
+        "categoryFilter": [],
+        "itemTypeFilter": "(any)",
+        "maxItems": 6,
+        "showViewAllLink": true,
+        "sourceSiteUrl": "",
+        "listTitle": "News Repository"
+      }
+    }
+  ]
+}

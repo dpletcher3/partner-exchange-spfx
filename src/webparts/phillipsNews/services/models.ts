@@ -1,0 +1,29 @@
+// Domain models for the Phillips News web part.
+
+// A single news card's data, normalized away from the raw SharePoint REST shape
+// (Image columns return serialized JSON, URL columns return { Url, Description }).
+export interface INewsItem {
+  id: number;
+  title: string;
+  // Category is a MultiChoice column in the News Repository list, so an item can
+  // carry more than one category. Stored as an array; the card renders the first.
+  categories: string[];
+  itemType: string;
+  linkUrl: string;
+  thumbnail?: INewsThumbnail;
+  shortDescription: string;
+  publishedDate: string; // ISO 8601 string as returned by SharePoint
+}
+
+export interface INewsThumbnail {
+  serverRelativeUrl: string;
+  alt: string;
+}
+
+// Filters applied to a news query. An empty `categories` array means "no
+// category filter"; an `itemType` of undefined or the ANY_ITEM_TYPE sentinel
+// means "no item-type filter".
+export interface INewsFilters {
+  categories: string[];
+  itemType?: string;
+}

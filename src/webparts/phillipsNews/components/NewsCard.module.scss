@@ -1,0 +1,67 @@
+@use '../../../styles/tokens' as *;
+
+// Entire card is a single anchor — the whole surface is the click target.
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// Fallback when the item has no thumbnail. Scaffold uses a solid Phillips-red
+// block; the polish turn replaces this with category-keyed treatment.
+.fallback {
+  width: 100%;
+  height: 100%;
+  background-color: $phil-red;
+}
+
+.content {
+  padding: 14px 16px 16px;
+}
+
+.category {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $phil-gray-600;
+  margin-bottom: 6px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: $phil-black;
+  margin-bottom: $phil-space-2;
+}
+
+.date {
+  font-size: 12px;
+  color: $phil-gray-400;
+  margin-bottom: $phil-space-2;
+}
+
+.description {
+  font-size: 13px;
+  line-height: 1.55;
+  color: $phil-gray-600;
+}

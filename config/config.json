@@ -9,10 +9,19 @@
           "manifest": "./src/extensions/phillipsBrand/PhillipsBrandApplicationCustomizer.manifest.json"
         }
       ]
+    },
+    "phillips-news-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsNews/PhillipsNewsWebPart.js",
+          "manifest": "./src/webparts/phillipsNews/PhillipsNewsWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
-    "PhillipsBrandApplicationCustomizerStrings": "lib/extensions/phillipsBrand/loc/{locale}.js"
+    "PhillipsBrandApplicationCustomizerStrings": "lib/extensions/phillipsBrand/loc/{locale}.js",
+    "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js"
   }
 }
