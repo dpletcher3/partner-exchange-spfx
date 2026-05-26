@@ -11,7 +11,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Company News'],
     itemType: 'Article',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/amc.aspx',
-    thumbnail: undefined,
     shortDescription:
       'The new facility expands our precision machining capacity and brings additional capability online for partner programs.',
     publishedDate: '2026-05-22T13:00:00Z'
@@ -22,7 +21,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Partners'],
     itemType: 'Article',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/dmgmori.aspx',
-    thumbnail: undefined,
     shortDescription:
       'A look at the joint engineering work driving faster turnaround on five-axis tooling for our shared customers.',
     publishedDate: '2026-05-20T15:30:00Z'
@@ -33,7 +31,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Federal & Defense'],
     itemType: 'Announcement',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/fed-q2.aspx',
-    thumbnail: undefined,
     shortDescription:
       'Watch the recorded briefing covering program updates, compliance changes, and the FY26 roadmap.',
     publishedDate: '2026-05-18T09:00:00Z'
@@ -44,7 +41,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Training'],
     itemType: 'Announcement',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/mycdt.aspx',
-    thumbnail: undefined,
     shortDescription:
       'New competency development tracks are open. Reserve a seat for the June cohort before slots fill.',
     publishedDate: '2026-05-15T11:45:00Z'
@@ -55,7 +51,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Company News', 'Phillips In The News'],
     itemType: 'Press',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/mms.aspx',
-    thumbnail: undefined,
     shortDescription:
       'Our automation strategy earned a feature in this month’s issue, highlighting throughput gains across the shop floor.',
     publishedDate: '2026-05-12T08:15:00Z'
@@ -66,7 +61,6 @@ const FIXTURES: INewsItem[] = [
     categories: ['Our Culture'],
     itemType: 'Article',
     linkUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox/SitePages/volunteer.aspx',
-    thumbnail: undefined,
     shortDescription:
       'Teams across three sites came together for the spring day of service. Here are the highlights and photos.',
     publishedDate: '2026-05-09T16:20:00Z'

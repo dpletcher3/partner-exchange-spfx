@@ -10,14 +10,13 @@ export interface INewsItem {
   categories: string[];
   itemType: string;
   linkUrl: string;
-  thumbnail?: INewsThumbnail;
+  // Server-relative URL of the item's thumbnail, resolved from the
+  // ThumbnailImage field + AttachmentFiles. Absent when the item has no usable
+  // thumbnail — the card renders the red fallback. Uses `undefined` rather than
+  // `null` per the rig's @rushstack/no-new-null rule (semantics identical).
+  thumbnailImageUrl?: string;
   shortDescription: string;
   publishedDate: string; // ISO 8601 string as returned by SharePoint
-}
-
-export interface INewsThumbnail {
-  serverRelativeUrl: string;
-  alt: string;
 }
 
 // Filters applied to a news query. An empty `categories` array means "no

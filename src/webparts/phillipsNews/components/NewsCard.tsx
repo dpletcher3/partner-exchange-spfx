@@ -10,9 +10,13 @@ const DESCRIPTION_MAX_CHARS = 120;
 
 export const NewsCard: React.FC<INewsCardProps> = ({ item }) => {
   const description = truncate(item.shortDescription, DESCRIPTION_MAX_CHARS);
-  const hasThumb = !!(item.thumbnail && item.thumbnail.serverRelativeUrl);
   // Card shows a single category label; an item may carry several (MultiChoice).
   const primaryCategory = item.categories.length > 0 ? item.categories[0] : '';
+
+  // Fall back to the red placeholder if there's no thumbnail URL or the image
+  // fails to load at runtime (broken URL, deleted attachment).
+  const [imageFailed, setImageFailed] = React.useState<boolean>(false);
+  const showImage = !!item.thumbnailImageUrl && !imageFailed;
 
   return (
     <a
@@ -23,11 +27,12 @@ export const NewsCard: React.FC<INewsCardProps> = ({ item }) => {
       aria-label={item.title}
     >
       <div className={styles.thumb}>
-        {hasThumb ? (
+        {showImage ? (
           <img
             className={styles.thumbImg}
-            src={item.thumbnail!.serverRelativeUrl}
-            alt={item.thumbnail!.alt}
+            src={item.thumbnailImageUrl}
+            alt={item.title}
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className={styles.fallback} aria-hidden="true" />

@@ -1,28 +1,31 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 
 import { INewsRepositoryService } from './INewsRepositoryService';
-import { INewsItem, INewsFilters, INewsThumbnail } from './models';
+import { INewsItem, INewsFilters } from './models';
 import { ANY_ITEM_TYPE } from '../config/constants';
+import {
+  extractUrl,
+  extractChoices,
+  extractThumbnailUrl,
+  IRawUrlField,
+  IRawAttachmentFile
+} from './extractors';
 
 // Raw REST shapes (minimal-metadata). Declared so the mapping code avoids `any`.
-interface IRawUrlField {
-  Url?: string;
-  Description?: string;
-}
-
 interface IRawListItem {
   Id: number;
   Title?: string;
   // MultiChoice column: minimal-metadata returns a plain array, verbose returns
-  // { results: [...] }; a single string is handled defensively too.
+  // { results: [...] }; a single string is handled defensively by extractChoices.
   Category?: string[] | { results?: string[] } | string;
   ItemType?: string;
-  // SharePoint may return these as null at runtime; the mapping guards handle
-  // falsy values. Typed optional (not `| null`) per the rig's no-new-null rule.
   // URL fields usually arrive as { Url, Description }, but can surface as a bare
   // string depending on the column/metadata — extractUrl handles both.
   LinkUrl?: IRawUrlField | string;
+  // ThumbnailImage is a JSON string with a fileName; the real URL lives in the
+  // matching AttachmentFiles entry (expanded in the query).
   ThumbnailImage?: string;
+  AttachmentFiles?: IRawAttachmentFile[] | { results?: IRawAttachmentFile[] };
   ShortDescription?: string;
   PublishedDate?: string;
 }
@@ -32,19 +35,19 @@ interface IItemsResponse {
 }
 
 interface IChoicesResponse {
-  // SharePoint REST (OData v3) returns a field's collection-valued Choices as a
-  // plain array under nometadata, but wrapped as { results: [...] } under the
-  // minimalmetadata level SPHttpClient.configurations.v1 negotiates.
+  // SharePoint REST returns a field's collection-valued Choices as a plain array
+  // under nometadata, but wrapped as { results: [...] } under the minimalmetadata
+  // level SPHttpClient negotiates. extractChoices handles both.
   Choices?: string[] | { results?: string[] };
 }
 
-interface IRawThumbnail {
-  serverRelativeUrl?: string;
-  alt?: string;
-}
-
+// AttachmentFiles is expanded so extractThumbnailUrl can match the ThumbnailImage
+// fileName to a real ServerRelativeUrl. The focused $select on the expanded
+// fields keeps the response lean (otherwise SharePoint serializes full
+// attachment metadata per file).
 const SELECT_FIELDS =
-  'Id,Title,Category,ItemType,LinkUrl,ThumbnailImage,ShortDescription,PublishedDate';
+  'Id,Title,Category,ItemType,LinkUrl,ThumbnailImage,ShortDescription,PublishedDate,' +
+  'AttachmentFiles/FileName,AttachmentFiles/ServerRelativeUrl';
 
 // When a category filter is active we must over-fetch and filter client-side
 // (Category is MultiChoice and can't be used in an OData $filter), then slice to
@@ -81,6 +84,7 @@ export class NewsRepositoryService implements INewsRepositoryService {
 
     const query: string[] = [
       `$select=${SELECT_FIELDS}`,
+      `$expand=AttachmentFiles`,
       `$orderby=${encodeURIComponent('PublishedDate desc')}`,
       `$top=${serverTop}`
     ];
@@ -147,77 +151,13 @@ function mapListItem(row: IRawListItem): INewsItem {
   return {
     id: row.Id,
     title: row.Title || '',
-    categories: toCategoryArray(row.Category),
+    categories: extractChoices(row.Category),
     itemType: row.ItemType || '',
     linkUrl: extractUrl(row.LinkUrl),
-    thumbnail: parseThumbnail(row.ThumbnailImage),
+    thumbnailImageUrl: extractThumbnailUrl(row.ThumbnailImage, row.AttachmentFiles),
     shortDescription: row.ShortDescription || '',
     publishedDate: row.PublishedDate || ''
   };
-}
-
-// Normalize a URL column value. SharePoint usually returns { Url, Description },
-// but some metadata/column configurations surface a bare string. Logs only when
-// it receives a non-empty object with no Url, so an unexpected shape is visible
-// while the common cases stay silent (console clean on the happy path).
-function extractUrl(raw: IRawUrlField | string | undefined): string {
-  if (!raw) {
-    return '';
-  }
-  if (typeof raw === 'string') {
-    return raw;
-  }
-  if (raw.Url) {
-    return raw.Url;
-  }
-  console.warn('[PhillipsNews] Unexpected LinkUrl shape', raw);
-  return '';
-}
-
-// Normalize a field's Choices across metadata modes: a plain array under
-// nometadata, or { results: [...] } under the minimalmetadata level that
-// SPHttpClient negotiates. Same dual-shape problem as toCategoryArray.
-function extractChoices(raw: string[] | { results?: string[] } | undefined): string[] {
-  if (!raw) {
-    return [];
-  }
-  if (Array.isArray(raw)) {
-    return raw;
-  }
-  return Array.isArray(raw.results) ? raw.results : [];
-}
-
-// Normalize the MultiChoice Category value across metadata modes: minimal
-// metadata returns a plain array, verbose returns { results: [...] }, and a bare
-// string is handled defensively.
-function toCategoryArray(
-  raw: string[] | { results?: string[] } | string | undefined
-): string[] {
-  if (!raw) {
-    return [];
-  }
-  if (Array.isArray(raw)) {
-    return raw;
-  }
-  if (typeof raw === 'string') {
-    return [raw];
-  }
-  return Array.isArray(raw.results) ? raw.results : [];
-}
-
-function parseThumbnail(raw: string | undefined): INewsThumbnail | undefined {
-  if (!raw) {
-    return undefined;
-  }
-  try {
-    const parsed = JSON.parse(raw) as IRawThumbnail;
-    if (parsed && parsed.serverRelativeUrl) {
-      return { serverRelativeUrl: parsed.serverRelativeUrl, alt: parsed.alt || '' };
-    }
-  } catch {
-    // Malformed Image-column JSON: treat as no thumbnail.
-  }
-  return undefined;
 }
 
 // Single quotes inside an OData string literal are escaped by doubling them.
