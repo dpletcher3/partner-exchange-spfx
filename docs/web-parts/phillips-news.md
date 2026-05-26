@@ -172,6 +172,16 @@ Discovered against the real seeded `News Repository` list during the scaffold tu
 - **`ShortDescription` is empty on the seeded items** (`null` in REST). Not a bug — a content gap. Cards correctly render no description until the column is populated; truncation is at ~120 chars.
 - **List has a leftover default `Choice 3`** in both the Category and ItemType columns (list-creation artifact). Cosmetic; the web part renders whatever choices the columns expose. Worth cleaning up in the list config, out of scope for this turn.
 
+## Polish-turn backlog
+
+Items deferred from the scaffold turn and confirmed during browser verification. To be addressed in the polish turn after the list-service turn.
+
+- **Resolve `Reserved_ImageAttachment` to a usable image URL** — closes scaffold deviation #2. Replaces the red fallback with actual thumbnails for items that have `ThumbnailImage` set on the list. Likely lives in the list-service turn rather than polish, since it's data-shape work, not visual.
+- **Soften the no-thumbnail fallback** — current Phillips-red fallback dominates the card at production canvas widths. Options: a lighter red tint, a Phillips-branded neutral graphic, or category-keyed treatments. Evaluate after real thumbnails are in for the items that have them.
+- **Bump grid minmax floor from 190px to ~240px** — at full SharePoint canvas width the grid resolves to 5 columns, which is cramped. A 240px floor gives 3-4 columns at typical widths, more breathing room per card.
+- **Hover treatment** — specifics deferred from scaffold. Border darken + light bg shift, no scale, no shadow per the spec; needs visual review with real photos.
+- **ShortDescription content guideline** — recommended length, recommended voice, what makes a good description vs. a bad one. Belongs in the seed-data documentation, not in the web part. Worth flagging here so polish has the editor-side context.
+
 ## Decisions captured
 
 | Decision | Choice | Date |
