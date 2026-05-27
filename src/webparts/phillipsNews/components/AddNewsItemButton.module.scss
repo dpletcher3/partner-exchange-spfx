@@ -1,0 +1,17 @@
+@use '../../../styles/tokens' as *;
+
+// Quiet text link, same visual weight as "View all →"; hover shifts to Phillips
+// red to signal the call-to-action. No background or border.
+.addButton {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $phil-gray-600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease-out;
+
+  &:hover {
+    color: $phil-red;
+  }
+}

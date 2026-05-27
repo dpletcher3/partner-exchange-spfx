@@ -30,6 +30,15 @@
   border-bottom: 2px solid $phil-red;
 }
 
+// Right side of the section header: groups the editor-only +Add link and the
+// "View all →" link, +Add to the left. Both are quiet links of equal weight.
+.headerActions {
+  display: flex;
+  align-items: baseline;
+  gap: $phil-space-4;
+  flex-shrink: 0;
+}
+
 .viewAll {
   flex-shrink: 0;
   font-size: 0.8125rem;

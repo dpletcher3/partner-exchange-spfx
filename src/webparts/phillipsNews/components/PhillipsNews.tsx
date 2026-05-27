@@ -7,6 +7,7 @@ import { NewsGrid } from './NewsGrid';
 import { LoadingState } from './LoadingState';
 import { EmptyState } from './EmptyState';
 import { ErrorState } from './ErrorState';
+import { AddNewsItemButton } from './AddNewsItemButton';
 
 export interface IPhillipsNewsProps {
   service: INewsRepositoryService;
@@ -17,6 +18,8 @@ export interface IPhillipsNewsProps {
   showViewAllLink: boolean;
   sourceSiteUrl: string;
   listTitle: string;
+  // True when the page is in edit mode; gates the editor-only +Add affordance.
+  isEditMode: boolean;
 }
 
 type Status = 'loading' | 'populated' | 'empty' | 'error';
@@ -73,7 +76,7 @@ export const PhillipsNews: React.FC<IPhillipsNewsProps> = (props) => {
   }, [load]);
 
   const viewAllUrl = buildViewAllUrl(props.sourceSiteUrl, props.listTitle);
-  const hasHeader = !!props.sectionTitle || props.showViewAllLink;
+  const hasHeader = !!props.sectionTitle || props.showViewAllLink || props.isEditMode;
 
   return (
     <section
@@ -89,11 +92,20 @@ export const PhillipsNews: React.FC<IPhillipsNewsProps> = (props) => {
           ) : (
             <span />
           )}
-          {props.showViewAllLink && (
-            <a className={styles.viewAll} href={viewAllUrl}>
-              View all →
-            </a>
-          )}
+          <div className={styles.headerActions}>
+            {/* Editor-only: conditionally rendered, absent from the DOM in read mode. */}
+            {props.isEditMode && (
+              <AddNewsItemButton
+                sourceSiteUrl={props.sourceSiteUrl}
+                listTitle={props.listTitle}
+              />
+            )}
+            {props.showViewAllLink && (
+              <a className={styles.viewAll} href={viewAllUrl}>
+                View all →
+              </a>
+            )}
+          </div>
         </div>
       )}
 

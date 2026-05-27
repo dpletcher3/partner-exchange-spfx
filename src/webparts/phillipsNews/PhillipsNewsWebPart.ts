@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Version } from '@microsoft/sp-core-library';
+import { DisplayMode, Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,
   IPropertyPaneDropdownOption,
@@ -66,7 +66,8 @@ export default class PhillipsNewsWebPart extends BaseClientSideWebPart<IPhillips
       maxItems: this.properties.maxItems || DEFAULT_MAX_ITEMS,
       showViewAllLink: this.properties.showViewAllLink !== false,
       sourceSiteUrl: this._resolvedSiteUrl,
-      listTitle: this._resolvedListTitle
+      listTitle: this._resolvedListTitle,
+      isEditMode: this.displayMode === DisplayMode.Edit
     });
 
     ReactDom.render(element, this.domElement);
