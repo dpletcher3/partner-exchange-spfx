@@ -4,6 +4,26 @@ Hard-won insights from building Partner Exchange SPFx. Add entries here when som
 
 ---
 
+## SPFx file/image property pane controls — use PropertyFieldFilePicker
+
+*Discovered 2026-05-27 (Phillips Personalized Hero, I08).*
+
+For any web part property that holds a file or image URL, default to
+PropertyFieldFilePicker from @pnp/spfx-property-controls, not
+PropertyPaneTextField. The picker gives editors three tabs (Browse,
+Upload, From a link) and matches the experience editors get from
+SharePoint's stock web parts.
+
+A text field for a URL is technically functional but immediately reads
+as wrong to editors who expect a Browse button. Discovered during the
+Phillips Personalized Hero (I08) build — initial scaffold used a text
+field and was visibly off-pattern; the file picker was added as a same-
+turn refinement.
+
+Default to PropertyFieldFilePicker for any future file-valued property.
+
+---
+
 ## SharePoint REST: CLI output is not the runtime shape
 
 *Discovered 2026-05-26 (PhillipsNews scaffold).*
