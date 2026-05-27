@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "886c8a6e-95c5-455c-8476-d289570acf51",
+  "alias": "PhillipsPersonalizedHeroWebPart",
+  "componentType": "WebPart",
+
+  // The "*" signifies that the version should be taken from the package.json
+  "version": "*",
+  "manifestVersion": 2,
+
+  // If true, the component can only be installed on sites where Custom Script is allowed.
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Phillips Personalized Hero" },
+      "description": {
+        "default": "Time-of-day greeting with the current user's first name, on a configurable color or image banner."
+      },
+      "officeFabricIconFontName": "Contact",
+      "properties": {
+        "backgroundType": "Color",
+        "backgroundColor": "#C8102E",
+        "backgroundImage": "",
+        "bannerHeight": 450,
+        "greetingColor": "#FFFFFF",
+        "greetingSize": 42,
+        "greetingWeight": 500,
+        "greetingAlignment": "Left"
+      }
+    }
+  ]
+}

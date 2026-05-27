@@ -1,0 +1,73 @@
+@use '../../../styles/tokens' as *;
+
+.hero {
+  display: flex;
+  // Column so the greeting pins to the top and the date/time to the bottom.
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  // Vertical padding keeps the greeting/date-time off the top/bottom edges;
+  // tighter on small viewports.
+  padding: $phil-space-6;
+  // 16px corners, matching the Phillips News cards (--phil-radius-xl).
+  border-radius: $phil-radius-xl;
+  // Clip the background (color or image) to the rounded corners.
+  overflow: hidden;
+  // Small horizontal margin so the rounding stays visible even when the hero is
+  // placed in a full-width section that otherwise runs edge-to-edge in the
+  // canvas. No `width: 100%` — the block <section> fills the canvas minus this
+  // margin, so the margin doesn't cause horizontal overflow.
+  margin: 0 $phil-space-4;
+  background-size: cover;
+  background-position: center center;
+
+  @media (max-width: 640px) {
+    padding: $phil-space-5 $phil-space-4;
+  }
+}
+
+// Horizontal alignment of the greeting + date/time within the column.
+.alignLeft {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.alignCenter {
+  align-items: center;
+  text-align: center;
+}
+
+.alignRight {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.greeting {
+  margin: 0;
+  // Matches the BrandedHeader wordmark/nav face.
+  font-family: $phil-font-display;
+  // Subtle drop shadow keeps white text legible over any image without a scrim.
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  // color, font-size, font-weight come from the property-pane values (inline).
+}
+
+// Date/time line at the bottom of the banner. Same face and shadow as the
+// greeting; size fixed at 16px (independent of greetingSize). Color inherits
+// greetingColor, applied inline.
+.dateTime {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-size: 16px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+// Edit-mode-only prompt when Image background is chosen but none is picked.
+.editPlaceholder {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $phil-font-body;
+  font-size: 1rem;
+  color: $phil-white;
+}

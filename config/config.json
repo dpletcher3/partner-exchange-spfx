@@ -17,11 +17,21 @@
           "manifest": "./src/webparts/phillipsNews/PhillipsNewsWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-personalized-hero-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsPersonalizedHero/PhillipsPersonalizedHeroWebPart.js",
+          "manifest": "./src/webparts/phillipsPersonalizedHero/PhillipsPersonalizedHeroWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
     "PhillipsBrandApplicationCustomizerStrings": "lib/extensions/phillipsBrand/loc/{locale}.js",
-    "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js"
+    "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js",
+    "PhillipsPersonalizedHeroWebPartStrings": "lib/webparts/phillipsPersonalizedHero/loc/{locale}.js",
+    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }
