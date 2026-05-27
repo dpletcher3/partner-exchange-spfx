@@ -1,15 +1,25 @@
 @use '../../../styles/tokens' as *;
 
 // Entire card is a single anchor — the whole surface is the click target.
+// height: 100% fills the grid row height (grid sets align-items: stretch) so
+// cards with different content lengths align to equal height across a row.
 .card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   background-color: $phil-white;
   border: 1px solid $phil-gray-200;
   border-radius: $phil-radius-xl;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
+  transition: border-color 0.15s ease-out;
+}
+
+// Hover affordance: darken the border only — no background shift, scale, or
+// shadow (those are noise on image-led cards).
+.card:hover {
+  border-color: $phil-gray-400;
 }
 
 .thumb {
@@ -33,7 +43,10 @@
   background-color: $phil-red;
 }
 
+// flex: 1 lets the content area grow to fill the stretched card height, so the
+// bottom edge of every card in a row lines up regardless of description length.
 .content {
+  flex: 1;
   padding: 14px 16px 16px;
 }
 

@@ -42,12 +42,15 @@
   }
 }
 
-// Responsive card grid: auto-fit resolves to 3 columns on desktop, 2 on
-// tablet, 1 on mobile at typical SharePoint canvas widths.
+// Responsive card grid: auto-fit with a 240px floor resolves to 3 columns at
+// typical SharePoint canvas widths (~800-1100px), 4 on very wide canvases, and
+// drops to 2 then 1 as the viewport narrows. align-items: stretch makes every
+// card in a row match the tallest card's height.
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: $phil-space-4;
+  align-items: stretch;
 }
 
 // Empty + error states share this centered message block.
