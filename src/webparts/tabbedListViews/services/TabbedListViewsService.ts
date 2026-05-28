@@ -3,15 +3,11 @@ import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { ITabbedListViewsService } from './ITabbedListViewsService';
 import { IListInfo, IViewInfo, IFieldInfo, ITabData, IListRow } from './models';
 
-// Field types whose values benefit from $expand=<field>&$select=<field>/Title
-// so OData returns the display name instead of just the Id. Without these,
-// Recipient (Lookup) and Author (User) come back as raw integers.
-const EXPANDABLE_FIELD_TYPES = new Set<string>([
-  'Lookup',
-  'LookupMulti',
-  'User',
-  'UserMulti'
-]);
+// Field types whose values are stored as SharePoint Image / Thumbnail columns.
+// Drives the conditional sidecar AttachmentFiles fetch (only needed when an
+// image field appears in the view; skipping the sidecar avoids the unrelated
+// 500s observed for Partner Profiles in 1.0.1.3).
+const IMAGE_FIELD_TYPES = new Set<string>(['Thumbnail', 'Image']);
 
 // Raw OData shapes for the requests below — declared locally so the mapping
 // code avoids `any`. Minimal-metadata serialization is assumed (SPHttpClient
@@ -46,8 +42,16 @@ interface IRawViewDefinition {
   ViewFields?: unknown;
 }
 
-interface IGetItemsResponse {
-  value?: IListRow[];
+interface IRenderListDataResponse {
+  Row?: IListRow[];
+}
+
+interface IAttachmentLookupResponse {
+  value?: Array<{
+    Id?: number | string;
+    ID?: number | string;
+    AttachmentFiles?: unknown;
+  }>;
 }
 
 export class TabbedListViewsService implements ITabbedListViewsService {
@@ -123,37 +127,33 @@ export class TabbedListViewsService implements ITabbedListViewsService {
     ]);
 
     const allViewFields = uniqueStrings([...view.viewFields, ...extraFields]);
+    const viewXml = buildViewXml(view.viewQuery, allViewFields, view.rowLimit);
+
+    // RenderListDataAsStream is the primary items query — honors the view's
+    // CAML (filter / sort / row limit) and resolves Lookup + User columns to
+    // [{lookupId, lookupValue}] arrays so display names show without a second
+    // round-trip. 1.0.1.3 briefly used GetItems + OData $expand, which
+    // returned 500s for Partner Profiles in production despite working for
+    // Awards — root cause unconfirmed without DevTools, but reverting here
+    // restores the path that already proved compatible with both lists.
+    const rows = await this._renderListData(siteUrl, listId, viewXml);
+
+    // Conditional sidecar: SharePoint Image columns store only a fileName in
+    // their column value, with the real URL living in the item's
+    // AttachmentFiles. Only fetch that when the view actually includes an
+    // image-typed field, so lists without image columns (Partner Profiles,
+    // Celebrations views) skip the second call entirely.
     const fieldsByName = new Map<string, IFieldInfo>();
     for (const f of fields) {
       fieldsByName.set(f.internalName, f);
     }
-
-    // Build $select + $expand. Lookups/Users get expanded so the display name
-    // arrives instead of the raw Id. AttachmentFiles is always expanded so
-    // SharePoint Image columns (which store only a fileName in the column
-    // value) can be resolved to a real URL on the client.
-    const selectParts: string[] = ['Id'];
-    const expandParts: string[] = [];
-    for (const fieldName of allViewFields) {
-      const meta = fieldsByName.get(fieldName);
-      if (meta && EXPANDABLE_FIELD_TYPES.has(meta.typeAsString)) {
-        selectParts.push(`${fieldName}/Title`);
-        expandParts.push(fieldName);
-      } else {
-        selectParts.push(fieldName);
-      }
+    const hasImageField = allViewFields.some((name) => {
+      const meta = fieldsByName.get(name);
+      return !!meta && IMAGE_FIELD_TYPES.has(meta.typeAsString);
+    });
+    if (hasImageField && rows.length > 0) {
+      await this._enrichRowsWithAttachments(siteUrl, listId, rows);
     }
-    selectParts.push('AttachmentFiles/FileName', 'AttachmentFiles/ServerRelativeUrl');
-    expandParts.push('AttachmentFiles');
-
-    const viewXml = buildViewXml(view.viewQuery, allViewFields, view.rowLimit);
-    const rows = await this._getItems(
-      siteUrl,
-      listId,
-      viewXml,
-      selectParts,
-      expandParts
-    );
 
     const fieldDisplayNames: { [internalName: string]: string } = {};
     for (const f of fields) {
@@ -191,32 +191,13 @@ export class TabbedListViewsService implements ITabbedListViewsService {
     };
   }
 
-  private async _getItems(
+  private async _renderListData(
     siteUrl: string,
     listId: string,
-    viewXml: string,
-    selectParts: string[],
-    expandParts: string[]
+    viewXml: string
   ): Promise<IListRow[]> {
-    // GetItems honors the view's CAML query (filter, sort, row limit) AND
-    // supports OData $select/$expand in the URL. RenderListDataAsStream (used
-    // up through 1.0.1.2) honored CAML but couldn't expand AttachmentFiles,
-    // which is exactly what SharePoint Image columns need to resolve their
-    // fileName to a URL — see PhillipsNews for the same pattern.
-    const select = encodeURIComponent(uniqueStrings(selectParts).join(','));
-    const expand = encodeURIComponent(uniqueStrings(expandParts).join(','));
-    const url =
-      `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/GetItems` +
-      `?$select=${select}&$expand=${expand}`;
-
-    // __metadata.type is required by SharePoint for the CamlQuery payload
-    // shape under minimal-metadata; omitting it produces a 400.
-    const body = JSON.stringify({
-      query: {
-        __metadata: { type: 'SP.CamlQuery' },
-        ViewXml: viewXml
-      }
-    });
+    const url = `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/RenderListDataAsStream`;
+    const body = JSON.stringify({ parameters: { ViewXml: viewXml } });
 
     const response: SPHttpClientResponse = await this._spHttpClient.post(
       url,
@@ -231,8 +212,62 @@ export class TabbedListViewsService implements ITabbedListViewsService {
       throw new Error(`Items query failed: ${response.status} ${response.statusText}`);
     }
 
-    const json: IGetItemsResponse = await response.json();
-    return json.value || [];
+    const json: IRenderListDataResponse = await response.json();
+    return json.Row || [];
+  }
+
+  // Sidecar OData call: fetches AttachmentFiles for the items already
+  // returned by RenderListDataAsStream and writes them into each row by Id.
+  // Only called when an image-typed field is in the view's selection (see
+  // `hasImageField` in getTabData), so non-image lists skip the round-trip.
+  private async _enrichRowsWithAttachments(
+    siteUrl: string,
+    listId: string,
+    rows: IListRow[]
+  ): Promise<void> {
+    const ids: number[] = [];
+    for (const row of rows) {
+      const id = rowId(row);
+      if (id !== undefined) {
+        ids.push(id);
+      }
+    }
+    if (ids.length === 0) {
+      return;
+    }
+
+    // Build $filter=Id eq 1 or Id eq 2 or ... — SP REST OData doesn't
+    // support the `in` operator, so we OR the IDs together. URL length is
+    // bounded by the view's RowLimit (default 30 ⇒ ~250 chars), well under
+    // SharePoint's request-line cap.
+    const filterClause = ids.map((id) => `Id eq ${id}`).join(' or ');
+    const url =
+      `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/items` +
+      `?$select=Id,AttachmentFiles/FileName,AttachmentFiles/ServerRelativeUrl` +
+      `&$expand=AttachmentFiles` +
+      `&$filter=${encodeURIComponent(filterClause)}` +
+      `&$top=${ids.length}`;
+
+    const json = await this._getJson<IAttachmentLookupResponse>(url, 'attachments');
+    const byId = new Map<number, unknown>();
+    for (const item of json.value || []) {
+      const id = item.Id ?? item.ID;
+      if (typeof id === 'number') {
+        byId.set(id, item.AttachmentFiles);
+      } else if (typeof id === 'string') {
+        const parsed = Number(id);
+        if (!isNaN(parsed)) {
+          byId.set(parsed, item.AttachmentFiles);
+        }
+      }
+    }
+
+    for (const row of rows) {
+      const id = rowId(row);
+      if (id !== undefined && byId.has(id)) {
+        (row as { AttachmentFiles?: unknown }).AttachmentFiles = byId.get(id);
+      }
+    }
   }
 
   private async _getJson<T>(url: string, what: string): Promise<T> {
@@ -255,6 +290,22 @@ export class TabbedListViewsService implements ITabbedListViewsService {
 
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
+}
+
+// RenderListDataAsStream returns Id under both `ID` (uppercase) and `Id`
+// depending on the field; normalize so the sidecar can match item IDs.
+function rowId(row: IListRow): number | undefined {
+  const candidate = row.ID ?? row.Id;
+  if (typeof candidate === 'number') {
+    return candidate;
+  }
+  if (typeof candidate === 'string') {
+    const n = Number(candidate);
+    if (!isNaN(n)) {
+      return n;
+    }
+  }
+  return undefined;
 }
 
 function uniqueStrings(values: string[]): string[] {
