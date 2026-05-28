@@ -11,6 +11,7 @@ import { IListInfo, IViewInfo, IFieldInfo, ITabData, IListRow } from './models';
 interface IRawList {
   Id: string;
   Title: string;
+  BaseTemplate: number;
 }
 
 interface IRawView {
@@ -43,23 +44,35 @@ export class TabbedListViewsService implements ITabbedListViewsService {
   public constructor(private readonly _spHttpClient: SPHttpClient) {}
 
   public async getLists(siteUrl: string): Promise<IListInfo[]> {
-    // BaseTemplate 100 = Generic List. Filters out libraries (101), tasks
-    // (107), and other system list types. Hidden lists are also excluded so
-    // the editor doesn't see SP system catalogs.
+    // Show all visible lists; the editor reads the title and picks the right
+    // one. We deliberately don't filter by BaseTemplate — different
+    // provisioning paths (PnP, m365 CLI) produce lists with different
+    // templates, and an over-tight filter is what hid Awards / Partner
+    // Profiles from the dropdown in 1.0.1.0.
+    // OData filter values are URL-encoded so the embedded spaces don't get
+    // mangled by SPHttpClient (PhillipsNews uses the same pattern).
+    const filter = encodeURIComponent('Hidden eq false');
     const url =
       `${trimSlash(siteUrl)}/_api/web/lists` +
-      `?$filter=Hidden eq false and BaseTemplate eq 100` +
-      `&$select=Id,Title` +
+      `?$filter=${filter}` +
+      `&$select=Id,Title,BaseTemplate` +
       `&$orderby=Title`;
 
     const json = await this._getJson<IListValueResponse<IRawList>>(url, 'lists');
-    return (json.value || []).map((row) => ({ id: row.Id, title: row.Title }));
+    // Drop the worst noise: document libraries (101), wiki pages (119), site
+    // pages (850/851), workflow history (140), form templates (117). Keep
+    // everything else so a list with an unexpected template still shows up.
+    const NOISY_TEMPLATES = new Set<number>([101, 117, 119, 140, 850, 851]);
+    return (json.value || [])
+      .filter((row) => !NOISY_TEMPLATES.has(row.BaseTemplate))
+      .map((row) => ({ id: row.Id, title: row.Title }));
   }
 
   public async getViews(siteUrl: string, listId: string): Promise<IViewInfo[]> {
+    const filter = encodeURIComponent('Hidden eq false and PersonalView eq false');
     const url =
       `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/views` +
-      `?$filter=Hidden eq false and PersonalView eq false` +
+      `?$filter=${filter}` +
       `&$select=Id,Title` +
       `&$orderby=Title`;
 
@@ -70,9 +83,10 @@ export class TabbedListViewsService implements ITabbedListViewsService {
   public async getFields(siteUrl: string, listId: string): Promise<IFieldInfo[]> {
     // Hidden eq false keeps the dropdown short; calculated fields stay in
     // because they're often the overlay source (e.g. TenuredChampionMilestone).
+    const filter = encodeURIComponent('Hidden eq false');
     const url =
       `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/fields` +
-      `?$filter=Hidden eq false` +
+      `?$filter=${filter}` +
       `&$select=InternalName,Title,FieldTypeKind,TypeAsString` +
       `&$orderby=Title`;
 

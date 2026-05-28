@@ -6,8 +6,7 @@ import {
   IPropertyPaneDropdownOption,
   PropertyPaneTextField,
   PropertyPaneDropdown,
-  PropertyPaneToggle,
-  PropertyPaneLabel
+  PropertyPaneToggle
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import {
@@ -104,7 +103,9 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
         this._availableLists = lists;
       })
       .catch((err: unknown) => {
-        console.warn('[TabbedListViews] Failed to load lists', err);
+        // Loud log so a failed lists fetch is visible in DevTools rather than
+        // silently leaving the dropdown empty (the 1.0.1.0 failure mode).
+        console.error('[TabbedListViews] Failed to load lists', err);
         this._availableLists = [];
       })
       .then(() => {
@@ -228,17 +229,27 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
       { key: 'bottom-right', text: strings.OverlayPositionBottomRightLabel }
     ];
 
+    // Loading indicator while the lists fetch is in flight, and a not-found
+    // placeholder option after a successful-but-empty load. Always rendering
+    // the dropdown (instead of swapping it with a label) avoids the 1.0.1.0
+    // failure mode where a silently-failed fetch left the user with no list
+    // picker at all.
+    const listDropdownOptions: IPropertyPaneDropdownOption[] = !this._listChoicesLoaded
+      ? [{ key: '', text: 'Loading lists…' }]
+      : listOptions.length > 0
+        ? listOptions
+        : [{ key: '', text: '(no lists found on this site)' }];
+
     const contentFields = [
       PropertyPaneTextField('sectionTitle', {
         label: strings.SectionTitleFieldLabel
       }),
-      this._availableLists.length > 0
-        ? PropertyPaneDropdown('listId', {
-            label: strings.ListFieldLabel,
-            options: listOptions,
-            selectedKey: this.properties.listId || undefined
-          })
-        : PropertyPaneLabel('listEmptyLabel', { text: strings.ListEmptyLabel }),
+      PropertyPaneDropdown('listId', {
+        label: strings.ListFieldLabel,
+        options: listDropdownOptions,
+        selectedKey: this.properties.listId || undefined,
+        disabled: !this._listChoicesLoaded || listOptions.length === 0
+      }),
       PropertyPaneDropdown('layout', {
         label: strings.LayoutFieldLabel,
         options: layoutOptions,
@@ -256,8 +267,9 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
         manageBtnLabel: strings.TabsManageButtonLabel,
         value: this.properties.tabs || [],
         enableSorting: true,
-        disableItemCreation: !this.properties.listId,
-        disableItemDeletion: !this.properties.listId,
+        // Item creation is always allowed so the Add button is visible even
+        // before a list is picked — the view dropdown stays empty until then,
+        // but the editor isn't trapped on a "No data" screen with no controls.
         fields: [
           {
             id: 'label',
