@@ -49,11 +49,14 @@
 // the BrandedHeader hub nav).
 .tabStrip {
   display: flex;
-  gap: $phil-space-4;
+  flex-wrap: wrap;
+  row-gap: $phil-space-2;
+  column-gap: $phil-space-4;
   border-bottom: 1px solid $phil-gray-200;
   margin-bottom: $phil-space-4;
-  // Allow horizontal overflow on narrow viewports rather than wrapping mid-row.
-  overflow-x: auto;
+  // No overflow scrolling — overflow-x: auto here previously caused SharePoint
+  // to render scroll-affordance chevrons in the corner of the strip even when
+  // labels fit easily. flex-wrap lets labels reflow on narrow viewports.
 }
 
 .tab {
