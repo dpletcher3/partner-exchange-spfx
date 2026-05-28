@@ -1,0 +1,96 @@
+@use '../../../styles/tokens' as *;
+
+// Outer frame — matches the container shape used by PhillipsListView (16px
+// corners, faint border on white, breath room around content).
+.container {
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  padding: $phil-space-5;
+  font-family: $phil-font-body;
+  // Two-column grid above 600px. The text column takes ~42% and the image
+  // column takes ~58% as called out in the spec.
+  display: grid;
+  grid-template-columns: 42fr 58fr;
+  gap: $phil-space-5;
+  // Top-align both columns. The image already fills its column from the top,
+  // so this just pulls the (often-shorter) text block out of vertical
+  // centering and lets it sit at the same baseline as the image's top edge.
+  align-items: start;
+}
+
+// Responsive stack — below 600px, columns collapse to a single column with
+// the image on top. Horizontal padding tightens to ~16px so the card doesn't
+// feel cramped on narrow phones.
+@media (max-width: 600px) {
+  .container {
+    grid-template-columns: 1fr;
+    padding: $phil-space-4;
+    gap: $phil-space-4;
+  }
+  .textColumn {
+    order: 2;
+  }
+  .imageColumn {
+    order: 1;
+  }
+  .header {
+    font-size: 28px;
+  }
+}
+
+.textColumn {
+  display: flex;
+  flex-direction: column;
+  // Vertical breathing room between eyebrow, header, description — each
+  // element controls its own bottom margin so the gaps stay scoped to each
+  // pair.
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: $phil-red;
+  margin: 0 0 $phil-space-2 0;
+}
+
+.header {
+  margin: 0 0 $phil-space-3 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  // 40px reads as a card headline; 32px was still getting lost next to the
+  // image at typical card widths. Scales to 28px below the 600px breakpoint
+  // where the card has stacked.
+  font-size: 40px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+}
+
+.description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $phil-gray-900;
+  // Respect editor-entered newlines so multi-paragraph descriptions render
+  // sensibly without HTML.
+  white-space: pre-wrap;
+}
+
+.imageColumn {
+  width: 100%;
+}
+
+.unconfigured {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 14px;
+  background-color: $phil-white;
+  border: 1px dashed $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  font-family: $phil-font-body;
+}

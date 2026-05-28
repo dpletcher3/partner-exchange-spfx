@@ -33,6 +33,14 @@
           "manifest": "./src/webparts/phillipsListView/PhillipsListViewWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-media-card-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsMediaCard/PhillipsMediaCardWebPart.js",
+          "manifest": "./src/webparts/phillipsMediaCard/PhillipsMediaCardWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -41,6 +49,7 @@
     "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js",
     "PhillipsPersonalizedHeroWebPartStrings": "lib/webparts/phillipsPersonalizedHero/loc/{locale}.js",
     "PhillipsListViewWebPartStrings": "lib/webparts/phillipsListView/loc/{locale}.js",
+    "PhillipsMediaCardWebPartStrings": "lib/webparts/phillipsMediaCard/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

@@ -1,0 +1,73 @@
+@use '../../../styles/tokens' as *;
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: $phil-radius-lg;
+  overflow: hidden;
+  background-color: $phil-gray-100;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// Play overlay — rendered as a button so it's natively keyboard-focusable.
+// Sits absolute, fills the wrapper, draws the 60px dark circle + white play
+// glyph centered on top of the image.
+.playButton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // Subtle dim so the white play glyph reads against any photo.
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease-out;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.18);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $phil-white;
+    outline-offset: -4px;
+    background-color: rgba(0, 0, 0, 0.18);
+  }
+}
+
+.playCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease-out;
+
+  // Slight lift on hover — the spec calls for "hover slightly lightens".
+  .playButton:hover & {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+// Triangle drawn via SVG so it's crisp at any size. Centered visually by
+// nudging right ~2px (the optical center of a triangle isn't its geometric
+// center).
+.playIcon {
+  width: 22px;
+  height: 22px;
+  fill: $phil-white;
+  margin-left: 3px;
+}

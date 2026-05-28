@@ -1,0 +1,68 @@
+@use '../../../styles/tokens' as *;
+
+// Backdrop covers the viewport. position: fixed because the modal is rendered
+// via createPortal into document.body — it should overlay the whole page, not
+// the web part's container.
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.72);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $phil-space-5;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  max-height: 80vh;
+  background-color: $phil-black;
+  border-radius: $phil-radius-lg;
+  // Hide the iframe's square corners against the rounded modal — overflow on
+  // the wrapper clips them. Same trick the GalleryLayout card uses for its
+  // image.
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.closeButton {
+  position: absolute;
+  top: $phil-space-3;
+  right: $phil-space-3;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: $phil-white;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $phil-white;
+    outline-offset: 2px;
+  }
+}
+
+.playerSlot {
+  // Aspect-ratio so video doesn't jitter as it loads; capped by the modal's
+  // max-height so a portrait-aspect viewer still fits.
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 80vh;
+}

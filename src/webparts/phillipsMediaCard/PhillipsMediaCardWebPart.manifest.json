@@ -1,0 +1,34 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "5d8e3f2b-1a7c-4d9e-b6f3-2c8d4e5a1b7c",
+  "alias": "PhillipsMediaCardWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Phillips Media Card" },
+      "description": {
+        "default": "Two-column featured-content card with header and description on the left and an image on the right. Optional video URL turns the image into a click-to-play target opening a modal player (SharePoint/Stream/MP4, YouTube, or Vimeo)."
+      },
+      "officeFabricIconFontName": "PlayerSettings",
+      "properties": {
+        "eyebrow": "",
+        "header": "",
+        "description": "",
+        "videoUrl": "",
+        "videoSourceType": "sharepoint",
+        "vimeoThumbnailUrl": ""
+      }
+    }
+  ]
+}
