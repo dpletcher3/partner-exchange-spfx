@@ -1,0 +1,100 @@
+@use '../../../styles/tokens' as *;
+
+// Outer frame: white surface, faint border, 16px rounded corners (Phillips
+// container radius — same as the Personalized Hero and the News card).
+.container {
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  padding: $phil-space-5;
+  font-family: $phil-font-body;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $phil-space-3;
+  margin-bottom: $phil-space-4;
+}
+
+.title {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  padding-bottom: $phil-space-2;
+  border-bottom: 2px solid $phil-red;
+}
+
+.seeAll {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: $phil-gray-600;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &:hover {
+    color: $phil-red;
+  }
+}
+
+// Horizontal tab strip below the header. Each tab is a quiet button; the
+// active tab grows a 2px Phillips-red underline (same active-state pattern as
+// the BrandedHeader hub nav).
+.tabStrip {
+  display: flex;
+  gap: $phil-space-4;
+  border-bottom: 1px solid $phil-gray-200;
+  margin-bottom: $phil-space-4;
+  // Allow horizontal overflow on narrow viewports rather than wrapping mid-row.
+  overflow-x: auto;
+}
+
+.tab {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: $phil-space-2 0;
+  margin-bottom: -1px; // sit on top of the strip's border so active-underline aligns
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $phil-gray-600;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    color: $phil-black;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $phil-blue;
+    outline-offset: 2px;
+  }
+}
+
+.tabActive {
+  color: $phil-black;
+  border-bottom-color: $phil-red;
+}
+
+.content {
+  // Minimum height so the strip doesn't visually collapse when a tab is empty.
+  min-height: 60px;
+}
+
+.message {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 0.875rem;
+}

@@ -25,6 +25,14 @@
           "manifest": "./src/webparts/phillipsPersonalizedHero/PhillipsPersonalizedHeroWebPart.manifest.json"
         }
       ]
+    },
+    "tabbed-list-views-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/tabbedListViews/TabbedListViewsWebPart.js",
+          "manifest": "./src/webparts/tabbedListViews/TabbedListViewsWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -32,6 +40,7 @@
     "PhillipsBrandApplicationCustomizerStrings": "lib/extensions/phillipsBrand/loc/{locale}.js",
     "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js",
     "PhillipsPersonalizedHeroWebPartStrings": "lib/webparts/phillipsPersonalizedHero/loc/{locale}.js",
+    "TabbedListViewsWebPartStrings": "lib/webparts/tabbedListViews/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

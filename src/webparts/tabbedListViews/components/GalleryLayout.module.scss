@@ -1,0 +1,103 @@
+@use '../../../styles/tokens' as *;
+
+// Auto-fit grid with a 240px floor — resolves to 3 columns on a typical
+// SharePoint canvas (~800-1100px) and drops to 2 then 1 as the viewport
+// narrows. align-items: stretch keeps cards equal height across a row.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: $phil-space-4;
+  align-items: stretch;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  overflow: hidden;
+  transition: border-color 0.15s ease-out;
+
+  &:hover {
+    border-color: $phil-gray-400;
+  }
+}
+
+.thumb {
+  position: relative; // anchor for absolutely-positioned overlay badges
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// Fallback when the row has no image: same Phillips-red block we use for News
+// cards without thumbnails.
+.fallback {
+  width: 100%;
+  height: 100%;
+  background-color: $phil-red;
+}
+
+.body {
+  flex: 1;
+  padding: 14px 16px 16px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: $phil-black;
+  margin-bottom: $phil-space-2;
+}
+
+.secondary {
+  font-size: 13px;
+  line-height: 1.5;
+  color: $phil-gray-600;
+}
+
+// Overlay badge: Phillips-red pill anchored to one of four corners of the
+// thumbnail. Position class is chosen at render time based on overlayPosition.
+.overlay {
+  position: absolute;
+  background-color: $phil-red;
+  color: $phil-white;
+  font-family: $phil-font-display;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: $phil-radius-pill;
+  pointer-events: none;
+}
+
+.overlayTopLeft {
+  top: $phil-space-2;
+  left: $phil-space-2;
+}
+
+.overlayTopRight {
+  top: $phil-space-2;
+  right: $phil-space-2;
+}
+
+.overlayBottomLeft {
+  bottom: $phil-space-2;
+  left: $phil-space-2;
+}
+
+.overlayBottomRight {
+  bottom: $phil-space-2;
+  right: $phil-space-2;
+}

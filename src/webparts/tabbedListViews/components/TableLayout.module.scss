@@ -1,0 +1,46 @@
+@use '../../../styles/tokens' as *;
+
+// Horizontal scroll if a wide list exceeds the canvas; rows align across the
+// full width otherwise.
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: $phil-black;
+}
+
+.headerCell {
+  text-align: left;
+  padding: $phil-space-2 $phil-space-3;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $phil-gray-600;
+  border-bottom: 1px solid $phil-gray-200;
+  background-color: $phil-white;
+  white-space: nowrap;
+}
+
+.row {
+  // Subtle separator between rows; no zebra-striping (cleaner look matches the
+  // spec's "clean rows without SharePoint chrome").
+  &:not(:last-child) .cell {
+    border-bottom: 1px solid $phil-gray-100;
+  }
+
+  &:hover .cell {
+    background-color: $phil-gray-50;
+  }
+}
+
+.cell {
+  padding: $phil-space-3;
+  vertical-align: top;
+  line-height: 1.45;
+}
