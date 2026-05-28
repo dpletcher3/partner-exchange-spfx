@@ -123,6 +123,7 @@ export class TabbedListViewsService implements ITabbedListViewsService {
 
     return {
       viewFields: view.viewFields,
+      fields,
       fieldDisplayNames,
       rows
     };

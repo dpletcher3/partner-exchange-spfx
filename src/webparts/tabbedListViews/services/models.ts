@@ -43,10 +43,14 @@ export interface IListRow {
 }
 
 // Bundled response for a single tab's data load: the view's field order,
-// display-name lookup for those fields (used by table headers), and the rows
-// returned by the view's CAML query.
+// full field metadata (so callers can identify image fields by their
+// TypeAsString without re-parsing row values), and the rows returned by the
+// view's CAML query.
 export interface ITabData {
   viewFields: string[];
+  fields: IFieldInfo[];
+  // Convenience lookup derived from `fields` — frequent access by callers
+  // (e.g. table column headers).
   fieldDisplayNames: { [internalName: string]: string };
   rows: IListRow[];
 }

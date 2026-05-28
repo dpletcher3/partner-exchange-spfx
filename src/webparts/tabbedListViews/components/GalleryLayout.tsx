@@ -1,7 +1,12 @@
 import * as React from 'react';
 
 import styles from './GalleryLayout.module.scss';
-import { ITabData, IListRow, OverlayPosition } from '../services/models';
+import { ITabData, IListRow, IFieldInfo, OverlayPosition } from '../services/models';
+
+// Field TypeAsString values that SharePoint uses for image-bearing columns.
+// "Thumbnail" is the modern Image column (Lists 2020+); "URL" with image
+// hyperlink subtype falls back via row-value parsing below.
+const IMAGE_FIELD_TYPES = new Set<string>(['Thumbnail', 'Image']);
 
 export interface IGalleryLayoutProps {
   data: ITabData;
@@ -79,12 +84,16 @@ export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
   overlayLabelTemplate,
   overlayPosition
 }) => {
-  // Detect the image field once per data load — the first field whose value
-  // parses as a Thumbnail JSON. Done at component scope so all cards in the
-  // grid share the same image field choice (consistent layout per tab).
+  // Image-field detection order:
+  //   1. Field metadata — first viewField whose TypeAsString matches a known
+  //      image type ("Thumbnail" / "Image"). This is the reliable path.
+  //   2. Fall back to row-value sniffing only if #1 finds nothing (e.g.
+  //      hyperlink columns serving as ad-hoc image fields).
   const imageField = React.useMemo<string | undefined>(
-    () => findFirstThumbnailField(data.rows, data.viewFields),
-    [data.rows, data.viewFields]
+    () =>
+      findImageFieldByMetadata(data.fields, data.viewFields) ??
+      findImageFieldByRowValues(data.rows, data.viewFields),
+    [data.fields, data.rows, data.viewFields]
   );
 
   return (
@@ -109,10 +118,36 @@ export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
 // Value extractors
 // ---------------------------------------------------------------------------
 
-// RenderListDataAsStream serializes Image / Thumbnail columns as a JSON string.
-// Returns the field's InternalName, or undefined if no row carries a parseable
-// thumbnail in any of the view's fields.
-function findFirstThumbnailField(rows: IListRow[], viewFields: string[]): string | undefined {
+// Primary detector: walks the view's selected fields and returns the first
+// whose TypeAsString identifies it as an image column. Reliable because it
+// depends on schema metadata rather than the per-row JSON shape, which has
+// surprised us before (1.0.1.1 used row-value sniffing only and failed when
+// the Image column's serialized JSON didn't surface `serverRelativeUrl` at
+// the expected key).
+function findImageFieldByMetadata(
+  fields: IFieldInfo[],
+  viewFields: string[]
+): string | undefined {
+  const byName = new Map<string, IFieldInfo>();
+  for (const f of fields) {
+    byName.set(f.internalName, f);
+  }
+  for (const field of viewFields) {
+    const meta = byName.get(field);
+    if (meta && IMAGE_FIELD_TYPES.has(meta.typeAsString)) {
+      return field;
+    }
+  }
+  return undefined;
+}
+
+// Fallback detector: scans actual row values for anything that looks like an
+// image payload. Catches Hyperlink-typed columns being used as ad-hoc image
+// fields, or unusual response shapes.
+function findImageFieldByRowValues(
+  rows: IListRow[],
+  viewFields: string[]
+): string | undefined {
   for (const field of viewFields) {
     for (const row of rows) {
       if (extractThumbnailUrl(row[field])) {
@@ -123,28 +158,46 @@ function findFirstThumbnailField(rows: IListRow[], viewFields: string[]): string
   return undefined;
 }
 
-// Pulls serverRelativeUrl out of an Image/Thumbnail column value, which arrives
-// as a JSON string like {"type":"thumbnail","fileName":"x","serverRelativeUrl":"/sites/.../x.jpg",...}.
+// Pulls a usable URL out of an Image/Thumbnail column value. The column's
+// serialized shape varies — RenderListDataAsStream usually returns a JSON
+// string like {"type":"thumbnail","serverRelativeUrl":"/sites/.../x.jpg",...},
+// but the response can also arrive already parsed, or with the URL under a
+// differently-cased key. This walks every plausible shape before giving up.
 function extractThumbnailUrl(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !value) {
+  if (value === null || value === undefined || value === '') {
     return undefined;
   }
-  // Image columns always start with a JSON object opening brace; cheap early
-  // exit for plain text values.
-  if (value.charAt(0) !== '{') {
+
+  let obj: { [key: string]: unknown } | undefined;
+
+  if (typeof value === 'string') {
+    if (value.charAt(0) !== '{') {
+      return undefined;
+    }
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (parsed && typeof parsed === 'object') {
+        obj = parsed as { [key: string]: unknown };
+      }
+    } catch {
+      return undefined;
+    }
+  } else if (typeof value === 'object') {
+    obj = value as { [key: string]: unknown };
+  }
+
+  if (!obj) {
     return undefined;
   }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(value);
-  } catch {
-    return undefined;
-  }
-  if (parsed && typeof parsed === 'object') {
-    const obj = parsed as { [key: string]: unknown };
-    const url = obj.serverRelativeUrl;
-    if (typeof url === 'string' && url) {
-      return url;
+
+  // Try the common URL keys in priority order. serverRelativeUrl is the
+  // canonical key for SP Image columns; the others handle edge cases observed
+  // across hyperlink columns and verbose-metadata responses.
+  const URL_KEYS = ['serverRelativeUrl', 'ServerRelativeUrl', 'fileServerRelativeUrl', 'Url', 'url'];
+  for (const key of URL_KEYS) {
+    const v = obj[key];
+    if (typeof v === 'string' && v) {
+      return v;
     }
   }
   return undefined;

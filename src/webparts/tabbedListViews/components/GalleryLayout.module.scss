@@ -1,13 +1,17 @@
 @use '../../../styles/tokens' as *;
 
-// Auto-fit grid with a 240px floor — resolves to 3 columns on a typical
-// SharePoint canvas (~800-1100px) and drops to 2 then 1 as the viewport
-// narrows. align-items: stretch keeps cards equal height across a row.
+// Auto-fill (not auto-fit) so a single card doesn't stretch to fill the
+// container — auto-fit collapses empty tracks, which made the first 1.0.1.1
+// gallery render Test Award as one full-width 1330px card with a 1000px-tall
+// placeholder. auto-fill keeps the empty columns reserved at minmax-min width.
+// Column width is capped at 280px so cards stay in a "tile" footprint even on
+// a wide canvas with few items.
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 280px));
   gap: $phil-space-4;
   align-items: stretch;
+  justify-content: start;
 }
 
 .card {
@@ -39,12 +43,14 @@
   display: block;
 }
 
-// Fallback when the row has no image: same Phillips-red block we use for News
-// cards without thumbnails.
+// Fallback when the row has no image. Neutral gray instead of Phillips red —
+// red is reserved for the overlay badge and brand accents, and reusing it as
+// the "no image" sentinel made absent-image cards loud rather than quiet
+// (the 1.0.1.1 Test-Award symptom).
 .fallback {
   width: 100%;
   height: 100%;
-  background-color: $phil-red;
+  background-color: $phil-gray-100;
 }
 
 .body {
