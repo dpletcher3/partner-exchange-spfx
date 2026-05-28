@@ -4,6 +4,7 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,
   IPropertyPaneDropdownOption,
+  IPropertyPaneField,
   PropertyPaneTextField,
   PropertyPaneDropdown,
   PropertyPaneToggle
@@ -14,13 +15,13 @@ import {
   CustomCollectionFieldType
 } from '@pnp/spfx-property-controls/lib/PropertyFieldCollectionData';
 
-import * as strings from 'TabbedListViewsWebPartStrings';
+import * as strings from 'PhillipsListViewWebPartStrings';
 import {
-  TabbedListViews,
-  ITabbedListViewsProps
-} from './components/TabbedListViews';
-import { ITabbedListViewsService } from './services/ITabbedListViewsService';
-import { TabbedListViewsService } from './services/TabbedListViewsService';
+  PhillipsListView,
+  IPhillipsListViewProps
+} from './components/PhillipsListView';
+import { IPhillipsListViewService } from './services/IPhillipsListViewService';
+import { PhillipsListViewService } from './services/PhillipsListViewService';
 import {
   ITabConfig,
   IListInfo,
@@ -30,10 +31,16 @@ import {
   OverlayPosition
 } from './services/models';
 
-export interface ITabbedListViewsWebPartProps {
+export interface IPhillipsListViewWebPartProps {
   sectionTitle: string;
   listId: string;
   layout: Layout;
+  // Tab strip on/off. Default true (matches the original tabbed behavior, so
+  // existing instances configured under "Tabbed List Views" keep working).
+  showTabs: boolean;
+  // Single view picked when showTabs is false.
+  viewId: string;
+  // Used when showTabs is true.
   tabCount: number;
   tabs: ITabConfig[];
   seeAllUrl: string;
@@ -43,8 +50,8 @@ export interface ITabbedListViewsWebPartProps {
   overlayPosition: OverlayPosition;
 }
 
-export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbedListViewsWebPartProps> {
-  private _service!: ITabbedListViewsService;
+export default class PhillipsListViewWebPart extends BaseClientSideWebPart<IPhillipsListViewWebPartProps> {
+  private _service!: IPhillipsListViewService;
   private _availableLists: IListInfo[] = [];
   private _availableViews: IViewInfo[] = [];
   private _availableFields: IFieldInfo[] = [];
@@ -53,17 +60,21 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
   private _viewsAndFieldsLoadedFor: string | undefined = undefined;
 
   protected onInit(): Promise<void> {
-    this._service = new TabbedListViewsService(this.context.spHttpClient);
+    this._service = new PhillipsListViewService(this.context.spHttpClient);
     return super.onInit();
   }
 
   public render(): void {
-    const props: ITabbedListViewsProps = {
+    const props: IPhillipsListViewProps = {
       service: this._service,
       siteUrl: this.context.pageContext.web.absoluteUrl,
       sectionTitle: this.properties.sectionTitle || '',
       listId: this.properties.listId || '',
       layout: this.properties.layout || 'gallery',
+      // Default to true so existing 1.0.1.x instances (which don't have this
+      // property serialized) keep their tab strip — undefined would be falsy.
+      showTabs: this.properties.showTabs !== false,
+      viewId: this.properties.viewId || '',
       tabCount: this.properties.tabCount || 2,
       tabs: this.properties.tabs || [],
       seeAllUrl: this.properties.seeAllUrl || '',
@@ -73,7 +84,7 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
       overlayPosition: this.properties.overlayPosition || 'bottom-left'
     };
 
-    ReactDom.render(React.createElement(TabbedListViews, props), this.domElement);
+    ReactDom.render(React.createElement(PhillipsListView, props), this.domElement);
   }
 
   protected onDispose(): void {
@@ -105,7 +116,7 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
       .catch((err: unknown) => {
         // Loud log so a failed lists fetch is visible in DevTools rather than
         // silently leaving the dropdown empty (the 1.0.1.0 failure mode).
-        console.error('[TabbedListViews] Failed to load lists', err);
+        console.error('[PhillipsListView] Failed to load lists', err);
         this._availableLists = [];
       })
       .then(() => {
@@ -151,7 +162,7 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
         this.context.propertyPane.refresh();
       })
       .catch((err: unknown) => {
-        console.warn('[TabbedListViews] Failed to load views/fields', err);
+        console.warn('[PhillipsListView] Failed to load views/fields', err);
         if (this.properties.listId !== targetListId) {
           return;
         }
@@ -171,8 +182,10 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
 
     if (propertyPath === 'listId' && oldValue !== newValue) {
       // List changed: clear dependent properties so the editor isn't left with
-      // tab views or overlay source from the prior list.
+      // tab views, a single-view selection, or overlay source from the prior
+      // list.
       this.properties.tabs = [];
+      this.properties.viewId = '';
       this.properties.overlaySourceField = '';
       this._availableViews = [];
       this._availableFields = [];
@@ -189,6 +202,11 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
       this.properties.showOverlay = false;
     }
 
+    if (propertyPath === 'showTabs') {
+      // Toggle flips the visible field set; refresh so the new fields appear.
+      this.context.propertyPane.refresh();
+    }
+
     this.render();
   }
 
@@ -202,7 +220,7 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
       text: l.title
     }));
 
-    const viewOptions: { key: string; text: string }[] = this._availableViews.map((v) => ({
+    const viewOptions: IPropertyPaneDropdownOption[] = this._availableViews.map((v) => ({
       key: v.id,
       text: v.title
     }));
@@ -240,7 +258,9 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
         ? listOptions
         : [{ key: '', text: '(no lists found on this site)' }];
 
-    const contentFields = [
+    const showTabs = this.properties.showTabs !== false;
+
+    const contentFields: IPropertyPaneField<unknown>[] = [
       PropertyPaneTextField('sectionTitle', {
         label: strings.SectionTitleFieldLabel
       }),
@@ -255,44 +275,76 @@ export default class TabbedListViewsWebPart extends BaseClientSideWebPart<ITabbe
         options: layoutOptions,
         selectedKey: this.properties.layout || 'gallery'
       }),
-      PropertyPaneDropdown('tabCount', {
-        label: strings.TabCountFieldLabel,
-        options: tabCountOptions,
-        selectedKey: this.properties.tabCount || 2
-      }),
-      PropertyFieldCollectionData('tabs', {
-        key: 'tabsField',
-        label: strings.TabsFieldLabel,
-        panelHeader: strings.TabsPanelHeader,
-        manageBtnLabel: strings.TabsManageButtonLabel,
-        value: this.properties.tabs || [],
-        enableSorting: true,
-        // Item creation is always allowed so the Add button is visible even
-        // before a list is picked — the view dropdown stays empty until then,
-        // but the editor isn't trapped on a "No data" screen with no controls.
-        fields: [
-          {
-            id: 'label',
-            title: strings.TabLabelColumnLabel,
-            type: CustomCollectionFieldType.string,
-            required: true
-          },
-          {
-            id: 'viewId',
-            title: strings.TabViewColumnLabel,
-            type: CustomCollectionFieldType.dropdown,
-            required: true,
-            options: viewOptions,
-            placeholder: strings.TabViewEmptyOptionLabel
-          }
-        ]
-      }),
-      PropertyPaneTextField('seeAllUrl', {
-        label: strings.SeeAllUrlFieldLabel
+      PropertyPaneToggle('showTabs', {
+        label: strings.ShowTabsFieldLabel,
+        checked: showTabs
       })
     ];
 
-    const overlayFields = [
+    if (showTabs) {
+      contentFields.push(
+        PropertyPaneDropdown('tabCount', {
+          label: strings.TabCountFieldLabel,
+          options: tabCountOptions,
+          selectedKey: this.properties.tabCount || 2
+        }),
+        PropertyFieldCollectionData('tabs', {
+          key: 'tabsField',
+          label: strings.TabsFieldLabel,
+          panelHeader: strings.TabsPanelHeader,
+          manageBtnLabel: strings.TabsManageButtonLabel,
+          value: this.properties.tabs || [],
+          enableSorting: true,
+          fields: [
+            {
+              id: 'label',
+              title: strings.TabLabelColumnLabel,
+              type: CustomCollectionFieldType.string,
+              required: true
+            },
+            {
+              id: 'viewId',
+              title: strings.TabViewColumnLabel,
+              type: CustomCollectionFieldType.dropdown,
+              required: true,
+              options: viewOptions,
+              placeholder: strings.TabViewEmptyOptionLabel
+            }
+          ]
+        })
+      );
+    } else {
+      // Single-view mode: one View dropdown drives the renderer directly.
+      // Disabled until a list is picked AND views have loaded; an empty
+      // placeholder option keeps the dropdown rendered (same pattern as the
+      // list picker — never swap to a label).
+      const singleViewOptions: IPropertyPaneDropdownOption[] = this.properties.listId
+        ? this._viewsAndFieldsLoadedFor === this.properties.listId
+          ? viewOptions.length > 0
+            ? viewOptions
+            : [{ key: '', text: '(no views found on this list)' }]
+          : [{ key: '', text: 'Loading views…' }]
+        : [{ key: '', text: 'Pick a list first' }];
+      contentFields.push(
+        PropertyPaneDropdown('viewId', {
+          label: strings.ViewFieldLabel,
+          options: singleViewOptions,
+          selectedKey: this.properties.viewId || undefined,
+          disabled:
+            !this.properties.listId ||
+            this._viewsAndFieldsLoadedFor !== this.properties.listId ||
+            viewOptions.length === 0
+        })
+      );
+    }
+
+    contentFields.push(
+      PropertyPaneTextField('seeAllUrl', {
+        label: strings.SeeAllUrlFieldLabel
+      })
+    );
+
+    const overlayFields: IPropertyPaneField<unknown>[] = [
       PropertyPaneToggle('showOverlay', {
         label: strings.ShowOverlayFieldLabel,
         disabled: this.properties.layout !== 'gallery'

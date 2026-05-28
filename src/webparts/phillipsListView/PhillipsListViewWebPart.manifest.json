@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
 
   "id": "4a8c3b9e-1d6f-4e8a-9b2c-5a7d8e3f1b2c",
-  "alias": "TabbedListViewsWebPart",
+  "alias": "PhillipsListViewWebPart",
   "componentType": "WebPart",
 
   "version": "*",
@@ -16,15 +16,17 @@
     {
       "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
       "group": { "default": "Phillips Custom Components" },
-      "title": { "default": "Tabbed List Views" },
+      "title": { "default": "Phillips List View" },
       "description": {
-        "default": "Renders a SharePoint list with 2-5 tabs driven by list views. Supports gallery cards or table rows, with an optional configurable overlay badge on cards."
+        "default": "Renders a SharePoint list as Phillips-branded gallery cards or table rows, with an optional 2-5 tab strip driven by list views and an optional overlay badge on cards."
       },
       "officeFabricIconFontName": "List",
       "properties": {
         "sectionTitle": "",
         "listId": "",
         "layout": "gallery",
+        "showTabs": true,
+        "viewId": "",
         "tabCount": 2,
         "tabs": [],
         "seeAllUrl": "",

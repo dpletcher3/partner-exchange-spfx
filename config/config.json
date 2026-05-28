@@ -26,11 +26,11 @@
         }
       ]
     },
-    "tabbed-list-views-web-part": {
+    "phillips-list-view-web-part": {
       "components": [
         {
-          "entrypoint": "./lib/webparts/tabbedListViews/TabbedListViewsWebPart.js",
-          "manifest": "./src/webparts/tabbedListViews/TabbedListViewsWebPart.manifest.json"
+          "entrypoint": "./lib/webparts/phillipsListView/PhillipsListViewWebPart.js",
+          "manifest": "./src/webparts/phillipsListView/PhillipsListViewWebPart.manifest.json"
         }
       ]
     }
@@ -40,7 +40,7 @@
     "PhillipsBrandApplicationCustomizerStrings": "lib/extensions/phillipsBrand/loc/{locale}.js",
     "PhillipsNewsWebPartStrings": "lib/webparts/phillipsNews/loc/{locale}.js",
     "PhillipsPersonalizedHeroWebPartStrings": "lib/webparts/phillipsPersonalizedHero/loc/{locale}.js",
-    "TabbedListViewsWebPartStrings": "lib/webparts/tabbedListViews/loc/{locale}.js",
+    "PhillipsListViewWebPartStrings": "lib/webparts/phillipsListView/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

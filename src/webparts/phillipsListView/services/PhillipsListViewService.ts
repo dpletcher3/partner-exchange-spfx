@@ -1,6 +1,6 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 
-import { ITabbedListViewsService } from './ITabbedListViewsService';
+import { IPhillipsListViewService } from './IPhillipsListViewService';
 import { IListInfo, IViewInfo, IFieldInfo, ITabData, IListRow } from './models';
 
 // Field types whose values are stored as SharePoint Image / Thumbnail columns.
@@ -54,7 +54,7 @@ interface IAttachmentLookupResponse {
   }>;
 }
 
-export class TabbedListViewsService implements ITabbedListViewsService {
+export class PhillipsListViewService implements IPhillipsListViewService {
   public constructor(private readonly _spHttpClient: SPHttpClient) {}
 
   public async getLists(siteUrl: string): Promise<IListInfo[]> {

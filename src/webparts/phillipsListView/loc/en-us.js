@@ -1,6 +1,6 @@
 define([], function() {
   return {
-    "PropertyPaneDescription": "Render a list with up to five tabs driven by list views.",
+    "PropertyPaneDescription": "Render a SharePoint list as Phillips-branded cards or rows, optionally with a tab strip driven by list views.",
     "ContentGroupName": "Content",
     "OverlayGroupName": "Card overlay",
     "SectionTitleFieldLabel": "Section title",
@@ -9,6 +9,8 @@ define([], function() {
     "LayoutFieldLabel": "Layout",
     "LayoutGalleryOptionLabel": "Gallery cards",
     "LayoutTableOptionLabel": "Table rows",
+    "ShowTabsFieldLabel": "Show tabs",
+    "ViewFieldLabel": "View",
     "TabCountFieldLabel": "Number of tabs",
     "TabsFieldLabel": "Tabs",
     "TabsPanelHeader": "Configure tabs",

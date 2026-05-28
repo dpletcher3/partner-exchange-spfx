@@ -1,9 +1,9 @@
 import { IListInfo, IViewInfo, IFieldInfo, ITabData } from './models';
 
-// Data-source contract for the Tabbed List Views web part. The React component
+// Data-source contract for the Phillips List View web part. The React component
 // depends on this interface, not on a concrete implementation, so the property
 // pane / runtime can swap in a mock for local development if needed later.
-export interface ITabbedListViewsService {
+export interface IPhillipsListViewService {
   // Visible, user-created lists on the current site (filtered to BaseTemplate
   // 100 — Generic List). Used by the property pane's list dropdown.
   getLists(siteUrl: string): Promise<IListInfo[]>;

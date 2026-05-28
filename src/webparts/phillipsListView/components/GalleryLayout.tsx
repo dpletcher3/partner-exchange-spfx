@@ -4,9 +4,41 @@ import styles from './GalleryLayout.module.scss';
 import { ITabData, IListRow, IFieldInfo, OverlayPosition } from '../services/models';
 
 // Field TypeAsString values that SharePoint uses for image-bearing columns.
-// "Thumbnail" is the modern Image column (Lists 2020+); "URL" with image
-// hyperlink subtype falls back via row-value parsing below.
 const IMAGE_FIELD_TYPES = new Set<string>(['Thumbnail', 'Image']);
+
+// Field TypeAsString values for Person/User columns. We treat these as
+// image-bearing because their value resolves to a profile photo via
+// /_layouts/15/userphoto.aspx.
+const PERSON_FIELD_TYPES = new Set<string>(['User', 'UserMulti']);
+
+// Person-field internal-name priority. When a list has multiple Person fields
+// the one whose internal name contains the earliest substring here wins,
+// before falling through to "any other non-administrative Person field". This
+// is how Partner Profiles' LinkedUser beats Author/Editor without the editor
+// having to configure the field explicitly.
+const PERSON_PRIORITY_SUBSTRINGS = ['LinkedUser', 'User', 'Person', 'Profile'];
+
+// Administrative Person fields present on every SharePoint list. Skipped by
+// auto-detect — they almost never represent "the person this row is about"
+// semantically, and picking them would silently render an editor's photo
+// instead of the subject's.
+const PERSON_DEPRIORITIZED_NAMES = new Set<string>([
+  'Author',
+  'Editor',
+  'CreatedBy',
+  'ModifiedBy'
+]);
+
+// Descriptor for the auto-detected image field. `kind` tells the per-row
+// extractor which path to use: 'image' = Image/Thumbnail column with file in
+// AttachmentFiles; 'person' = Person/User column with email → userphoto.aspx;
+// 'unknown' = field was found via row-value sniffing (Hyperlink etc.) and uses
+// the generic URL extractor.
+type ImageFieldKind = 'image' | 'person' | 'unknown';
+interface IImageFieldDescriptor {
+  name: string;
+  kind: ImageFieldKind;
+}
 
 export interface IGalleryLayoutProps {
   data: ITabData;
@@ -25,7 +57,7 @@ const OVERLAY_POSITION_CLASS: { [key in OverlayPosition]: string } = {
 
 interface ICardProps {
   row: IListRow;
-  imageField: string | undefined;
+  imageField: IImageFieldDescriptor | undefined;
   viewFields: string[];
   showOverlay: boolean;
   overlaySourceField: string;
@@ -44,9 +76,9 @@ const Card: React.FC<ICardProps> = ({
 }) => {
   const title = getStringValue(row.Title);
   const imageUrl = imageField
-    ? extractThumbnailUrl(row[imageField], row.AttachmentFiles)
+    ? resolveImageUrl(imageField, row)
     : undefined;
-  const secondary = getSecondaryLine(row, viewFields, imageField);
+  const secondary = getSecondaryLine(row, viewFields, imageField?.name);
 
   // Overlay only renders when configured AND the source field has a non-empty
   // value for THIS item. Empty values skip the badge silently.
@@ -87,11 +119,11 @@ export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
   overlayPosition
 }) => {
   // Image-field detection order:
-  //   1. Field metadata — first viewField whose TypeAsString matches a known
-  //      image type ("Thumbnail" / "Image"). This is the reliable path.
+  //   1. Field metadata — explicit Image / Thumbnail columns first, then
+  //      priority-ordered Person columns. This is the reliable path.
   //   2. Fall back to row-value sniffing only if #1 finds nothing (e.g.
-  //      hyperlink columns serving as ad-hoc image fields).
-  const imageField = React.useMemo<string | undefined>(
+  //      Hyperlink columns serving as ad-hoc image fields).
+  const imageField = React.useMemo<IImageFieldDescriptor | undefined>(
     () =>
       findImageFieldByMetadata(data.fields, data.viewFields) ??
       findImageFieldByRowValues(data.rows, data.viewFields),
@@ -117,29 +149,54 @@ export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
 };
 
 // ---------------------------------------------------------------------------
-// Value extractors
+// Image-field detection
 // ---------------------------------------------------------------------------
 
 // Primary detector: walks the view's selected fields and returns the first
-// whose TypeAsString identifies it as an image column. Reliable because it
-// depends on schema metadata rather than the per-row JSON shape, which has
-// surprised us before (1.0.1.1 used row-value sniffing only and failed when
-// the Image column's serialized JSON didn't surface `serverRelativeUrl` at
-// the expected key).
+// match by metadata. Image / Thumbnail columns beat Person columns; among
+// Person columns, internal-name priority decides the winner.
 function findImageFieldByMetadata(
   fields: IFieldInfo[],
   viewFields: string[]
-): string | undefined {
+): IImageFieldDescriptor | undefined {
   const byName = new Map<string, IFieldInfo>();
   for (const f of fields) {
     byName.set(f.internalName, f);
   }
+
+  // 1. Explicit Image / Thumbnail columns first — if a list has one, it's
+  //    almost always the intended "row photo".
   for (const field of viewFields) {
     const meta = byName.get(field);
     if (meta && IMAGE_FIELD_TYPES.has(meta.typeAsString)) {
-      return field;
+      return { name: field, kind: 'image' };
     }
   }
+
+  // 2. Priority-ordered Person columns. The first priority substring that
+  //    matches any view-field's internal name wins. Substring match is
+  //    case-insensitive so 'linkedUser' / 'LinkedUser' / 'LINKEDUSER' all work.
+  const personFields = viewFields.filter((f) => {
+    const meta = byName.get(f);
+    return !!meta && PERSON_FIELD_TYPES.has(meta.typeAsString);
+  });
+  for (const substring of PERSON_PRIORITY_SUBSTRINGS) {
+    const subLower = substring.toLowerCase();
+    for (const field of personFields) {
+      if (field.toLowerCase().indexOf(subLower) !== -1) {
+        return { name: field, kind: 'person' };
+      }
+    }
+  }
+
+  // 3. Any other Person field whose internal name isn't on the deprioritized
+  //    list (Author / Editor / CreatedBy / ModifiedBy).
+  for (const field of personFields) {
+    if (!PERSON_DEPRIORITIZED_NAMES.has(field)) {
+      return { name: field, kind: 'person' };
+    }
+  }
+
   return undefined;
 }
 
@@ -149,11 +206,11 @@ function findImageFieldByMetadata(
 function findImageFieldByRowValues(
   rows: IListRow[],
   viewFields: string[]
-): string | undefined {
+): IImageFieldDescriptor | undefined {
   for (const field of viewFields) {
     for (const row of rows) {
       if (looksLikeImagePayload(row[field])) {
-        return field;
+        return { name: field, kind: 'unknown' };
       }
     }
   }
@@ -178,12 +235,75 @@ function looksLikeImagePayload(value: unknown): boolean {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// Per-row URL resolution
+// ---------------------------------------------------------------------------
+
+// Dispatches to the right extractor based on the descriptor's kind. Returns
+// undefined if the row's value is empty or can't be resolved — the caller
+// falls back to the gray placeholder.
+function resolveImageUrl(
+  descriptor: IImageFieldDescriptor,
+  row: IListRow
+): string | undefined {
+  const value = row[descriptor.name];
+  if (descriptor.kind === 'person') {
+    const email = extractPersonEmail(value);
+    if (!email) {
+      return undefined;
+    }
+    // userphoto.aspx is host-relative; works across site collections without
+    // siteUrl prefixing. size=L (~96px) is the right footprint for our 280px
+    // card thumb at 4:3 aspect — smaller sizes pixelate noticeably.
+    return `/_layouts/15/userphoto.aspx?accountname=${encodeURIComponent(email)}&size=L`;
+  }
+  return extractThumbnailUrl(value, row.AttachmentFiles);
+}
+
+// Pulls the email out of a Person/User column value. RenderListDataAsStream
+// returns Person fields as either an array of entry-objects or a JSON-encoded
+// string of the same; the entry has `email` (lowercase) in current SP REST
+// responses, with `Email` / `EMail` as fallbacks for older response shapes.
+function extractPersonEmail(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+
+  let candidates: unknown[] = [];
+  if (typeof value === 'string') {
+    const first = value.charAt(0);
+    if (first !== '[' && first !== '{') {
+      return undefined;
+    }
+    try {
+      const parsed: unknown = JSON.parse(value);
+      candidates = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return undefined;
+    }
+  } else if (Array.isArray(value)) {
+    candidates = value;
+  } else if (typeof value === 'object') {
+    candidates = [value];
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object') {
+      continue;
+    }
+    const obj = candidate as { [k: string]: unknown };
+    const email = obj.email ?? obj.Email ?? obj.EMail;
+    if (typeof email === 'string' && email.indexOf('@') !== -1) {
+      return email;
+    }
+  }
+  return undefined;
+}
+
 // Pulls a usable URL out of an Image / Thumbnail column value. SharePoint
 // Image columns serialize as a JSON string containing only a fileName plus
 // the original display name — no URL — and the real file lives in the item's
-// AttachmentFiles, where the filename matches the JSON's `fileName`. This is
-// the exact same shape PhillipsNews resolves; 1.0.1.2 missed the lookup step
-// and rendered every Awards card as the gray fallback.
+// AttachmentFiles, where the filename matches the JSON's `fileName`.
 function extractThumbnailUrl(value: unknown, attachmentFiles: unknown): string | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined;
@@ -261,10 +381,10 @@ function findAttachmentUrl(attachmentFiles: unknown, fileName: string): string |
 function getSecondaryLine(
   row: IListRow,
   viewFields: string[],
-  imageField: string | undefined
+  imageFieldName: string | undefined
 ): string {
   for (const field of viewFields) {
-    if (field === 'Title' || field === imageField || field === 'ID' || field === 'LinkTitle') {
+    if (field === 'Title' || field === imageFieldName || field === 'ID' || field === 'LinkTitle') {
       continue;
     }
     const value = coerceToString(row[field]);

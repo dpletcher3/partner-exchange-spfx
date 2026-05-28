@@ -1,4 +1,4 @@
-declare interface ITabbedListViewsWebPartStrings {
+declare interface IPhillipsListViewWebPartStrings {
   PropertyPaneDescription: string;
   ContentGroupName: string;
   OverlayGroupName: string;
@@ -8,6 +8,8 @@ declare interface ITabbedListViewsWebPartStrings {
   LayoutFieldLabel: string;
   LayoutGalleryOptionLabel: string;
   LayoutTableOptionLabel: string;
+  ShowTabsFieldLabel: string;
+  ViewFieldLabel: string;
   TabCountFieldLabel: string;
   TabsFieldLabel: string;
   TabsPanelHeader: string;
@@ -31,7 +33,7 @@ declare interface ITabbedListViewsWebPartStrings {
   SeeAllLinkLabel: string;
 }
 
-declare module 'TabbedListViewsWebPartStrings' {
-  const strings: ITabbedListViewsWebPartStrings;
+declare module 'PhillipsListViewWebPartStrings' {
+  const strings: IPhillipsListViewWebPartStrings;
   export = strings;
 }
