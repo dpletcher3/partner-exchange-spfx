@@ -43,7 +43,9 @@ const Card: React.FC<ICardProps> = ({
   overlayPosition
 }) => {
   const title = getStringValue(row.Title);
-  const imageUrl = imageField ? extractThumbnailUrl(row[imageField]) : undefined;
+  const imageUrl = imageField
+    ? extractThumbnailUrl(row[imageField], row.AttachmentFiles)
+    : undefined;
   const secondary = getSecondaryLine(row, viewFields, imageField);
 
   // Overlay only renders when configured AND the source field has a non-empty
@@ -150,7 +152,7 @@ function findImageFieldByRowValues(
 ): string | undefined {
   for (const field of viewFields) {
     for (const row of rows) {
-      if (extractThumbnailUrl(row[field])) {
+      if (looksLikeImagePayload(row[field])) {
         return field;
       }
     }
@@ -158,18 +160,36 @@ function findImageFieldByRowValues(
   return undefined;
 }
 
-// Pulls a usable URL out of an Image/Thumbnail column value. The column's
-// serialized shape varies — RenderListDataAsStream usually returns a JSON
-// string like {"type":"thumbnail","serverRelativeUrl":"/sites/.../x.jpg",...},
-// but the response can also arrive already parsed, or with the URL under a
-// differently-cased key. This walks every plausible shape before giving up.
-function extractThumbnailUrl(value: unknown): string | undefined {
+// Shape check used by the row-value fallback detector. Cheap parse without
+// the AttachmentFiles lookup that the full extractor performs.
+function looksLikeImagePayload(value: unknown): boolean {
+  if (typeof value !== 'string' || value.charAt(0) !== '{') {
+    return false;
+  }
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (parsed && typeof parsed === 'object') {
+      const obj = parsed as { [k: string]: unknown };
+      return typeof obj.fileName === 'string' || typeof obj.serverRelativeUrl === 'string';
+    }
+  } catch {
+    // Not JSON — not an image payload.
+  }
+  return false;
+}
+
+// Pulls a usable URL out of an Image / Thumbnail column value. SharePoint
+// Image columns serialize as a JSON string containing only a fileName plus
+// the original display name — no URL — and the real file lives in the item's
+// AttachmentFiles, where the filename matches the JSON's `fileName`. This is
+// the exact same shape PhillipsNews resolves; 1.0.1.2 missed the lookup step
+// and rendered every Awards card as the gray fallback.
+function extractThumbnailUrl(value: unknown, attachmentFiles: unknown): string | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined;
   }
 
   let obj: { [key: string]: unknown } | undefined;
-
   if (typeof value === 'string') {
     if (value.charAt(0) !== '{') {
       return undefined;
@@ -185,19 +205,52 @@ function extractThumbnailUrl(value: unknown): string | undefined {
   } else if (typeof value === 'object') {
     obj = value as { [key: string]: unknown };
   }
-
   if (!obj) {
     return undefined;
   }
 
-  // Try the common URL keys in priority order. serverRelativeUrl is the
-  // canonical key for SP Image columns; the others handle edge cases observed
-  // across hyperlink columns and verbose-metadata responses.
+  // If the URL is inlined (modern hyperlink subtype, RenderListDataAsStream
+  // responses, etc.), take it directly.
   const URL_KEYS = ['serverRelativeUrl', 'ServerRelativeUrl', 'fileServerRelativeUrl', 'Url', 'url'];
   for (const key of URL_KEYS) {
     const v = obj[key];
     if (typeof v === 'string' && v) {
       return v;
+    }
+  }
+
+  // Otherwise resolve via attachment lookup — match the JSON's fileName to an
+  // entry in AttachmentFiles and use that attachment's ServerRelativeUrl.
+  const fileName = obj.fileName;
+  if (typeof fileName === 'string' && fileName) {
+    const url = findAttachmentUrl(attachmentFiles, fileName);
+    if (url) {
+      return url;
+    }
+  }
+
+  return undefined;
+}
+
+// AttachmentFiles arrives as a plain array under minimal-metadata responses
+// and as { results: [...] } under verbose. Returns the ServerRelativeUrl of
+// the attachment whose FileName matches `fileName`, or undefined if no match.
+function findAttachmentUrl(attachmentFiles: unknown, fileName: string): string | undefined {
+  let list: unknown[] = [];
+  if (Array.isArray(attachmentFiles)) {
+    list = attachmentFiles;
+  } else if (attachmentFiles && typeof attachmentFiles === 'object') {
+    const results = (attachmentFiles as { results?: unknown }).results;
+    if (Array.isArray(results)) {
+      list = results;
+    }
+  }
+  for (const entry of list) {
+    if (entry && typeof entry === 'object') {
+      const att = entry as { FileName?: unknown; ServerRelativeUrl?: unknown };
+      if (att.FileName === fileName && typeof att.ServerRelativeUrl === 'string') {
+        return att.ServerRelativeUrl;
+      }
     }
   }
   return undefined;
@@ -222,9 +275,11 @@ function getSecondaryLine(
   return '';
 }
 
-// Lookup/Person columns arrive as arrays of { lookupId, lookupValue } pairs;
-// text values arrive as strings. coerceToString handles both plus the empty
-// cases and returns '' for anything it can't resolve.
+// Coerces any field value to a display string.
+// - Strings, numbers, booleans pass through.
+// - Lookup / User columns arrive as objects with a Title (OData $expand) or
+//   arrays of similar entries; both shapes are unwrapped to display name(s).
+// - Returns '' for empty / null / unrecognized shapes.
 function coerceToString(value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '';
@@ -238,15 +293,34 @@ function coerceToString(value: unknown): string {
   if (Array.isArray(value)) {
     const names: string[] = [];
     for (const entry of value) {
-      if (entry && typeof entry === 'object') {
-        const obj = entry as { [key: string]: unknown };
-        const lookupValue = obj.lookupValue ?? obj.LookupValue ?? obj.title ?? obj.Title;
-        if (typeof lookupValue === 'string' && lookupValue) {
-          names.push(lookupValue);
-        }
+      const name = displayNameFromObject(entry);
+      if (name) {
+        names.push(name);
       }
     }
     return names.join(', ');
+  }
+  if (typeof value === 'object') {
+    return displayNameFromObject(value);
+  }
+  return '';
+}
+
+function displayNameFromObject(value: unknown): string {
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+  const obj = value as { [key: string]: unknown };
+  // OData $expand=Lookup&$select=Lookup/Title shape:
+  const title = obj.Title ?? obj.title;
+  if (typeof title === 'string' && title) {
+    return title;
+  }
+  // RenderListDataAsStream lookup shape (kept for safety; no longer the
+  // primary path after 1.0.1.3's switch to GetItems).
+  const lookupValue = obj.lookupValue ?? obj.LookupValue;
+  if (typeof lookupValue === 'string' && lookupValue) {
+    return lookupValue;
   }
   return '';
 }

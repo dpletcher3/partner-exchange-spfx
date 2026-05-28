@@ -3,6 +3,16 @@ import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { ITabbedListViewsService } from './ITabbedListViewsService';
 import { IListInfo, IViewInfo, IFieldInfo, ITabData, IListRow } from './models';
 
+// Field types whose values benefit from $expand=<field>&$select=<field>/Title
+// so OData returns the display name instead of just the Id. Without these,
+// Recipient (Lookup) and Author (User) come back as raw integers.
+const EXPANDABLE_FIELD_TYPES = new Set<string>([
+  'Lookup',
+  'LookupMulti',
+  'User',
+  'UserMulti'
+]);
+
 // Raw OData shapes for the requests below — declared locally so the mapping
 // code avoids `any`. Minimal-metadata serialization is assumed (SPHttpClient
 // default); collection-valued properties that arrive as { results: [...] }
@@ -36,8 +46,8 @@ interface IRawViewDefinition {
   ViewFields?: unknown;
 }
 
-interface IRenderListDataResponse {
-  Row?: IListRow[];
+interface IGetItemsResponse {
+  value?: IListRow[];
 }
 
 export class TabbedListViewsService implements ITabbedListViewsService {
@@ -112,9 +122,38 @@ export class TabbedListViewsService implements ITabbedListViewsService {
       this.getFields(siteUrl, listId)
     ]);
 
-    const allFields = uniqueStrings([...view.viewFields, ...extraFields]);
-    const viewXml = buildViewXml(view.viewQuery, allFields, view.rowLimit);
-    const rows = await this._renderListData(siteUrl, listId, viewXml);
+    const allViewFields = uniqueStrings([...view.viewFields, ...extraFields]);
+    const fieldsByName = new Map<string, IFieldInfo>();
+    for (const f of fields) {
+      fieldsByName.set(f.internalName, f);
+    }
+
+    // Build $select + $expand. Lookups/Users get expanded so the display name
+    // arrives instead of the raw Id. AttachmentFiles is always expanded so
+    // SharePoint Image columns (which store only a fileName in the column
+    // value) can be resolved to a real URL on the client.
+    const selectParts: string[] = ['Id'];
+    const expandParts: string[] = [];
+    for (const fieldName of allViewFields) {
+      const meta = fieldsByName.get(fieldName);
+      if (meta && EXPANDABLE_FIELD_TYPES.has(meta.typeAsString)) {
+        selectParts.push(`${fieldName}/Title`);
+        expandParts.push(fieldName);
+      } else {
+        selectParts.push(fieldName);
+      }
+    }
+    selectParts.push('AttachmentFiles/FileName', 'AttachmentFiles/ServerRelativeUrl');
+    expandParts.push('AttachmentFiles');
+
+    const viewXml = buildViewXml(view.viewQuery, allViewFields, view.rowLimit);
+    const rows = await this._getItems(
+      siteUrl,
+      listId,
+      viewXml,
+      selectParts,
+      expandParts
+    );
 
     const fieldDisplayNames: { [internalName: string]: string } = {};
     for (const f of fields) {
@@ -152,13 +191,32 @@ export class TabbedListViewsService implements ITabbedListViewsService {
     };
   }
 
-  private async _renderListData(
+  private async _getItems(
     siteUrl: string,
     listId: string,
-    viewXml: string
+    viewXml: string,
+    selectParts: string[],
+    expandParts: string[]
   ): Promise<IListRow[]> {
-    const url = `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/RenderListDataAsStream`;
-    const body = JSON.stringify({ parameters: { ViewXml: viewXml } });
+    // GetItems honors the view's CAML query (filter, sort, row limit) AND
+    // supports OData $select/$expand in the URL. RenderListDataAsStream (used
+    // up through 1.0.1.2) honored CAML but couldn't expand AttachmentFiles,
+    // which is exactly what SharePoint Image columns need to resolve their
+    // fileName to a URL — see PhillipsNews for the same pattern.
+    const select = encodeURIComponent(uniqueStrings(selectParts).join(','));
+    const expand = encodeURIComponent(uniqueStrings(expandParts).join(','));
+    const url =
+      `${trimSlash(siteUrl)}/_api/web/lists(guid'${listId}')/GetItems` +
+      `?$select=${select}&$expand=${expand}`;
+
+    // __metadata.type is required by SharePoint for the CamlQuery payload
+    // shape under minimal-metadata; omitting it produces a 400.
+    const body = JSON.stringify({
+      query: {
+        __metadata: { type: 'SP.CamlQuery' },
+        ViewXml: viewXml
+      }
+    });
 
     const response: SPHttpClientResponse = await this._spHttpClient.post(
       url,
@@ -173,8 +231,8 @@ export class TabbedListViewsService implements ITabbedListViewsService {
       throw new Error(`Items query failed: ${response.status} ${response.statusText}`);
     }
 
-    const json: IRenderListDataResponse = await response.json();
-    return json.Row || [];
+    const json: IGetItemsResponse = await response.json();
+    return json.value || [];
   }
 
   private async _getJson<T>(url: string, what: string): Promise<T> {

@@ -47,27 +47,33 @@ export const TableLayout: React.FC<ITableLayoutProps> = ({ data }) => {
 // Cell rendering
 // ---------------------------------------------------------------------------
 
-// Cells render the value as a plain string. Image/Thumbnail JSON strings fall
-// back to '' since rendering thumbnails inside table cells isn't part of the
-// spec for v1 (overlays are also off in the table layout).
+// Cells render the value as a plain string.
+// - Strings, numbers, booleans pass through.
+// - Image/Thumbnail JSON strings are dropped to '' (table cells don't render
+//   thumbnails in v1; overlays are also off in this layout).
+// - Lookup / User columns arrive as objects with a Title (OData $expand), or
+//   arrays of similar entries; both shapes are unwrapped to display name(s).
 function renderCell(value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '';
   }
   if (typeof value === 'string') {
-    // Image/Thumbnail JSON detected and dropped.
     if (value.charAt(0) === '{') {
       try {
         const parsed = JSON.parse(value);
-        if (
-          parsed &&
-          typeof parsed === 'object' &&
-          (parsed as { type?: unknown }).type === 'thumbnail'
-        ) {
-          return '';
+        if (parsed && typeof parsed === 'object') {
+          const obj = parsed as { [k: string]: unknown };
+          // Image / Thumbnail column: drop from table cells.
+          if (
+            obj.type === 'thumbnail' ||
+            typeof obj.fileName === 'string' ||
+            typeof obj.serverRelativeUrl === 'string'
+          ) {
+            return '';
+          }
         }
       } catch {
-        // Not a JSON value — fall through and render as plain text.
+        // Not JSON — render the raw text.
       }
     }
     return value;
@@ -78,15 +84,31 @@ function renderCell(value: unknown): string {
   if (Array.isArray(value)) {
     const names: string[] = [];
     for (const entry of value) {
-      if (entry && typeof entry === 'object') {
-        const obj = entry as { [key: string]: unknown };
-        const lookupValue = obj.lookupValue ?? obj.LookupValue ?? obj.title ?? obj.Title;
-        if (typeof lookupValue === 'string' && lookupValue) {
-          names.push(lookupValue);
-        }
+      const name = displayNameFromObject(entry);
+      if (name) {
+        names.push(name);
       }
     }
     return names.join(', ');
+  }
+  if (typeof value === 'object') {
+    return displayNameFromObject(value);
+  }
+  return '';
+}
+
+function displayNameFromObject(value: unknown): string {
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+  const obj = value as { [key: string]: unknown };
+  const title = obj.Title ?? obj.title;
+  if (typeof title === 'string' && title) {
+    return title;
+  }
+  const lookupValue = obj.lookupValue ?? obj.LookupValue;
+  if (typeof lookupValue === 'string' && lookupValue) {
+    return lookupValue;
   }
   return '';
 }
