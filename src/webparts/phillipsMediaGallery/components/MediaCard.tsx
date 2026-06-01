@@ -41,10 +41,10 @@ export const MediaCard: React.FC<IMediaCardProps> = ({ item, openInNewTab, httpC
         const t = getYouTubeThumbnails(v.id);
         console.log(`${LOG} card "${item.title}" thumbnail source: youtube`);
         setVisual({ kind: 'youtube', url: t.maxRes, hqFallback: t.hq });
-      } else if (v.kind === 'vimeo') {
-        // (b) Vimeo — async oEmbed (cached); placeholder until it resolves.
+      } else if (v.kind === 'vimeo' && v.id) {
+        // (b) Vimeo — async oEmbed (sessionStorage-cached); placeholder until it resolves.
         setVisual({ kind: 'placeholder' });
-        getVimeoThumbnail(item.videoUrl, httpClient)
+        getVimeoThumbnail(item.videoUrl, v.id, httpClient)
           .then((url) => {
             if (cancelled) {
               return;

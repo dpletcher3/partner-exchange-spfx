@@ -70,8 +70,15 @@
 
 .card:hover {
   border-color: $phil-red;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  // Subtle, on-brand: a soft Phillips-red-tinted lift rather than a hard shadow.
+  box-shadow: 0 4px 14px rgba(249, 66, 58, 0.15);
+  transform: translateY(-1px);
+}
+
+// Keyboard focus ring for the clickable (anchor) card.
+.card:focus-visible {
+  outline: 2px solid $phil-red;
+  outline-offset: 2px;
 }
 
 .mainVisual {
@@ -99,7 +106,8 @@
   display: flex;
   align-items: center;
   min-height: 44px;
-  padding: $phil-space-3 $phil-space-4;
+  // Even gutters around the label graphic (full-width art frames consistently).
+  padding: $phil-space-3;
 }
 
 .labelImage {
