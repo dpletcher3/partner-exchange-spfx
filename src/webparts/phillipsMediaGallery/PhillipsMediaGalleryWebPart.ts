@@ -4,31 +4,30 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,
   IPropertyPaneField,
+  IPropertyPaneDropdownOption,
   PropertyPaneTextField,
   PropertyPaneSlider,
   PropertyPaneToggle,
-  PropertyPaneLabel
+  PropertyPaneLabel,
+  PropertyPaneDropdown
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import {
   PropertyFieldListPicker,
   PropertyFieldListPickerOrderBy
 } from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
-import {
-  PropertyFieldColumnPicker,
-  PropertyFieldColumnPickerOrderBy,
-  IColumnReturnProperty
-} from '@pnp/spfx-property-controls/lib/PropertyFieldColumnPicker';
 
 import * as strings from 'PhillipsMediaGalleryWebPartStrings';
 import { PhillipsMediaGallery, IPhillipsMediaGalleryProps } from './components/PhillipsMediaGallery';
+import { MediaGalleryFieldService, IColumnInfo } from './services/MediaGalleryFieldService';
 
 // @pnp/spfx-property-controls ships its own nested copy of
-// @microsoft/sp-component-base, so its `context` prop type isn't structurally
-// assignable from WebPartContext (separate `_serviceScope` declarations). Cast
-// to the exact type the picker functions expect — avoids `any` and stays
-// correct if the package bumps its bundled sp-component-base.
+// @microsoft/sp-component-base, so PropertyFieldListPicker's `context` prop type
+// isn't structurally assignable from WebPartContext. Cast to the exact type the
+// function expects (avoids `any`, stays correct across package bumps).
 type PnpContext = Parameters<typeof PropertyFieldListPicker>[1]['context'];
+
+const LOG = '[MediaGallery]';
 
 export interface IPhillipsMediaGalleryWebPartProps {
   listId: string;
@@ -47,13 +46,24 @@ export interface IPhillipsMediaGalleryWebPartProps {
 const MIN_COLUMNS = 3;
 const MAX_COLUMNS = 5;
 const DEFAULT_COLUMNS = 4;
+const NONE_KEY = '__none__';
+
+type MappingProperty = 'titleField' | 'videoField' | 'labelImageField' | 'mainImageField';
 
 export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<IPhillipsMediaGalleryWebPartProps> {
+  private _fieldService!: MediaGalleryFieldService;
+  private _availableColumns: IColumnInfo[] = [];
+  private _columnsLoadedFor: string | undefined = undefined;
+  private _columnsLoading = false;
+
+  protected onInit(): Promise<void> {
+    this._fieldService = new MediaGalleryFieldService(this.context.spHttpClient);
+    return super.onInit();
+  }
+
   public render(): void {
-    // Turn 1 is scaffold only — no list reads, attachment/column image
-    // resolution, or thumbnail derivation yet (those land in Turn 2). The
-    // component renders placeholder cards in the "loaded" state and an
-    // empty-state prompt until a list is selected.
+    // Turn 1 is scaffold only — no list reads or thumbnail derivation yet (Turn
+    // 2). The component renders placeholder cards once a list is selected.
     const props: IPhillipsMediaGalleryProps = {
       columns: this._resolvedColumns,
       sectionTitle: this.properties.sectionTitle || '',
@@ -76,6 +86,70 @@ export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<I
     return Math.min(MAX_COLUMNS, Math.max(MIN_COLUMNS, c));
   }
 
+  // -------------------------------------------------------------------------
+  // Property-pane column loading (dependent on the selected list)
+  // -------------------------------------------------------------------------
+
+  protected onPropertyPaneConfigurationStart(): void {
+    // Initial-open path: a list may already be persisted (the reported bug —
+    // pane opens with 15 Practices selected). Load its columns now so the
+    // mapping dropdowns populate without requiring a list re-pick.
+    this._loadColumnsForCurrentList();
+  }
+
+  private _loadColumnsForCurrentList(): void {
+    const listId = this.properties.listId;
+    const siteUrl = this.context.pageContext.web.absoluteUrl;
+
+    if (!listId) {
+      console.log(`${LOG} no list selected — skipping column load`);
+      this._availableColumns = [];
+      this._columnsLoadedFor = undefined;
+      return;
+    }
+    if (this._columnsLoadedFor === listId || this._columnsLoading) {
+      console.log(`${LOG} columns already loaded/loading for listId=${listId}`);
+      return;
+    }
+
+    this._columnsLoading = true;
+    console.log(`${LOG} loading columns for listId=${listId} from ${siteUrl}`);
+
+    // Capture the in-flight listId so a later list change discards this result.
+    const targetListId = listId;
+    this._fieldService
+      .getColumns(siteUrl, targetListId)
+      .then((cols) => {
+        if (this.properties.listId !== targetListId) {
+          console.log(`${LOG} list changed while loading (${targetListId} → ${this.properties.listId}); discarding`);
+          return;
+        }
+        this._availableColumns = cols;
+        this._columnsLoadedFor = targetListId;
+        console.log(
+          `${LOG} loaded ${cols.length} columns for listId=${targetListId}:`,
+          cols.map((c) => c.internalName)
+        );
+        this.context.propertyPane.refresh();
+      })
+      .catch((err: unknown) => {
+        // Loud, unlike the @pnp control's silent .catch(() => {}).
+        console.warn(`${LOG} column fetch FAILED for listId=${targetListId}`, err);
+        if (this.properties.listId !== targetListId) {
+          return;
+        }
+        this._availableColumns = [];
+        this._columnsLoadedFor = targetListId; // mark resolved so we show "(no columns)" not a spinner
+        this.context.propertyPane.refresh();
+      })
+      .then(() => {
+        this._columnsLoading = false;
+      })
+      .catch(() => {
+        /* keep the promise non-floating */
+      });
+  }
+
   protected onPropertyPaneFieldChanged(
     propertyPath: string,
     oldValue: unknown,
@@ -83,34 +157,58 @@ export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<I
   ): void {
     super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
 
+    // The optional main-image "(none)" choice maps to an unset value so the data
+    // layer (Turn 2) treats it as "auto-derive from video", consistent with the
+    // unset default.
+    if (propertyPath === 'mainImageField' && newValue === NONE_KEY) {
+      this.properties.mainImageField = '';
+    }
+
     if (propertyPath === 'listId' && oldValue !== newValue) {
-      // Only clear mappings when switching between two real lists — preserve the
-      // manifest defaults (Title/Video/Image0) on the first list selection so the
-      // column pickers show them when the chosen list has those columns.
+      console.log(`${LOG} listId changed: ${String(oldValue) || '(none)'} → ${String(newValue) || '(none)'}`);
+      // Convention-with-override: only clear mappings when switching BETWEEN two
+      // real lists. The first selection (oldValue empty) must keep the manifest
+      // defaults (Title/Video/Image0) so the 15 Practices instance needs no
+      // remapping.
       if (oldValue) {
+        console.log(`${LOG} switching lists — clearing stale column mappings`);
         this.properties.titleField = '';
         this.properties.videoField = '';
         this.properties.labelImageField = '';
         this.properties.mainImageField = '';
+      } else {
+        console.log(`${LOG} first list selection — preserving default mappings (Title/Video/Image0)`);
       }
-      // Dependent property pane: refresh so the column pickers re-render against
-      // the new list. Their keys include the listId (below), so they remount and
-      // re-fetch the new list's columns — the known stale-dropdown fix.
+      // Re-fetch columns for the new list, then refresh so the dropdowns
+      // repopulate. Refresh immediately too so they show "Loading columns…".
+      this._availableColumns = [];
+      this._columnsLoadedFor = undefined;
+      this._loadColumnsForCurrentList();
       this.context.propertyPane.refresh();
     }
 
     this.render();
   }
 
+  // -------------------------------------------------------------------------
+  // Property-pane configuration
+  // -------------------------------------------------------------------------
+
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     const listId = this.properties.listId || '';
+    const columnsReady = !!listId && this._columnsLoadedFor === listId;
+    const branch = !listId ? 'no-list' : columnsReady ? 'populated' : 'loading';
+    console.log(
+      `${LOG} pane config: listId=${listId || '(none)'}, columnsLoadedFor=${this._columnsLoadedFor || '(none)'}, ` +
+        `availableColumns=${this._availableColumns.length}, field-mapping branch=${branch}`
+    );
 
     const mappingFields: IPropertyPaneField<unknown>[] = listId
       ? [
-          this._columnPicker('titleField', strings.TitleFieldLabel),
-          this._columnPicker('videoField', strings.VideoFieldLabel),
-          this._columnPicker('labelImageField', strings.LabelImageFieldLabel),
-          this._columnPicker('mainImageField', strings.MainImageFieldLabel)
+          this._mappingDropdown('titleField', strings.TitleFieldLabel, columnsReady, false),
+          this._mappingDropdown('videoField', strings.VideoFieldLabel, columnsReady, false),
+          this._mappingDropdown('labelImageField', strings.LabelImageFieldLabel, columnsReady, false),
+          this._mappingDropdown('mainImageField', strings.MainImageFieldLabel, columnsReady, true)
         ]
       : [PropertyPaneLabel('fieldMappingHint', { text: strings.FieldMappingEmptyLabel })];
 
@@ -153,7 +251,7 @@ export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<I
             },
             {
               groupName: strings.FieldMappingGroupName,
-              isCollapsed: true,
+              isCollapsed: false,
               groupFields: mappingFields
             }
           ]
@@ -162,25 +260,38 @@ export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<I
     };
   }
 
-  // Build a column picker bound to the currently selected list. The key embeds
-  // the listId so a list change remounts the control and forces a fresh column
-  // fetch (PropertyFieldColumnPicker self-fetches columns from `listId`).
-  private _columnPicker(
-    targetProperty: keyof IPhillipsMediaGalleryWebPartProps,
-    label: string
+  // A field-mapping dropdown populated from the selected list's columns.
+  // `optional` adds a "(none)" choice (used for the optional main-image override).
+  private _mappingDropdown(
+    targetProperty: MappingProperty,
+    label: string,
+    columnsReady: boolean,
+    optional: boolean
   ): IPropertyPaneField<unknown> {
-    return PropertyFieldColumnPicker(targetProperty, {
+    const columnOptions: IPropertyPaneDropdownOption[] = this._availableColumns.map((c) => ({
+      key: c.internalName,
+      text: c.displayName
+    }));
+
+    let options: IPropertyPaneDropdownOption[];
+    if (!columnsReady) {
+      options = [{ key: '', text: 'Loading columns…' }];
+    } else if (columnOptions.length === 0) {
+      options = [{ key: '', text: '(no columns found on this list)' }];
+    } else {
+      options = optional
+        ? [{ key: NONE_KEY, text: '(none — auto-derive)' }, ...columnOptions]
+        : columnOptions;
+    }
+
+    const stored = (this.properties[targetProperty] as string) || '';
+    const selectedKey = optional && stored === '' ? NONE_KEY : stored || undefined;
+
+    return PropertyPaneDropdown(targetProperty, {
       label,
-      context: this.context as unknown as PnpContext,
-      selectedColumn: this.properties[targetProperty] as string,
-      listId: this.properties.listId,
-      disabled: false,
-      orderBy: PropertyFieldColumnPickerOrderBy.Title,
-      columnReturnProperty: IColumnReturnProperty['Internal Name'],
-      onPropertyChange: this.onPropertyPaneFieldChanged.bind(this),
-      properties: this.properties,
-      deferredValidationTime: 0,
-      key: `mediaGallery-${String(targetProperty)}-${this.properties.listId}`
+      options,
+      selectedKey,
+      disabled: !columnsReady || columnOptions.length === 0
     });
   }
 }
