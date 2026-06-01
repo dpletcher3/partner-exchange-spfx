@@ -6,3 +6,12 @@ export interface IFieldMapping {
   videoField: string;
   infoField: string;
 }
+
+// The resolved featured item, normalized from the raw REST shape (the video
+// field is a Hyperlink column → { Url, Description }; info is plain Note text).
+export interface IHighlightItem {
+  id: number;
+  title: string;
+  videoUrl: string;
+  info: string;
+}

@@ -17,6 +17,7 @@ import {
 import * as strings from 'PhillipsHighlightVideoWebPartStrings';
 import { PhillipsHighlightVideo, IPhillipsHighlightVideoProps } from './components/PhillipsHighlightVideo';
 import { HighlightVideoService, IColumnInfo, IListItemRef } from './services/HighlightVideoService';
+import { IFieldMapping } from './services/models';
 
 // @pnp/spfx-property-controls ships its own nested copy of
 // @microsoft/sp-component-base, so PropertyFieldListPicker's `context` prop type
@@ -57,12 +58,20 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
   }
 
   public render(): void {
-    // Turn 1 is scaffold only — no item read or Vimeo embed yet (Turn 2). The
-    // component shows the configure prompt until a list AND item are chosen,
-    // then a placeholder shell.
+    // Convention-with-override: apply the §2 defaults so the data layer reads by
+    // real internal names even when a mapping property is unset.
+    const mapping: IFieldMapping = {
+      titleField: this.properties.titleField || 'Title',
+      videoField: this.properties.videoField || 'Video',
+      infoField: this.properties.infoField || 'HighlightInfo'
+    };
+
     const props: IPhillipsHighlightVideoProps = {
-      hasList: !!this.properties.listId,
-      hasItem: !!this.properties.itemId
+      service: this._service,
+      siteUrl: this.context.pageContext.web.absoluteUrl,
+      listId: this.properties.listId || '',
+      itemId: this.properties.itemId || 0,
+      mapping
     };
     ReactDom.render(React.createElement(PhillipsHighlightVideo, props), this.domElement);
   }

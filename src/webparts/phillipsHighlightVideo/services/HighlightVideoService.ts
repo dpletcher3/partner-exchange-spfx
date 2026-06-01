@@ -1,4 +1,9 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
+// Reuse the Media Card Gallery's pure helpers rather than re-implementing them
+// (per D035 / the spec): URL-field extraction here, Vimeo-id parsing in the
+// component. Both modules are SPFx-free, so cross-web-part import is safe.
+import { extractUrl } from '../../phillipsMediaGallery/services/extractors';
+import { IFieldMapping, IHighlightItem } from './models';
 
 export interface IColumnInfo {
   internalName: string;
@@ -82,5 +87,41 @@ export class HighlightVideoService {
     const json = (await response.json()) as IItemsResponse;
     const rows = json && json.value ? json.value : [];
     return rows.map((r) => ({ id: r.Id, title: r.Title || '' }));
+  }
+
+  // Reads the single featured item by ID, pulling the mapped title/video/info
+  // fields by their mapped internal names.
+  public async getItem(
+    siteUrl: string,
+    listId: string,
+    itemId: number,
+    mapping: IFieldMapping
+  ): Promise<IHighlightItem> {
+    const base = siteUrl.replace(/\/+$/, '');
+    // Internal field names are alphanumeric → safe to drop straight into $select.
+    const select = ['Id', mapping.titleField, mapping.videoField, mapping.infoField].join(',');
+    const url = `${base}/_api/web/lists(guid'${listId}')/items(${itemId})?$select=${select}`;
+    console.log(`[HighlightVideo] getItem URL: ${url}`);
+
+    const response: SPHttpClientResponse = await this._spHttpClient.get(
+      url,
+      SPHttpClient.configurations.v1
+    );
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(
+        `item fetch failed (${response.status} ${response.statusText}) — ${body.slice(0, 200)}`
+      );
+    }
+
+    const row = (await response.json()) as Record<string, unknown>;
+    const titleVal = row[mapping.titleField];
+    const infoVal = row[mapping.infoField];
+    return {
+      id: typeof row.Id === 'number' ? row.Id : itemId,
+      title: typeof titleVal === 'string' ? titleVal : '',
+      videoUrl: extractUrl(row[mapping.videoField]),
+      info: typeof infoVal === 'string' ? infoVal : ''
+    };
   }
 }

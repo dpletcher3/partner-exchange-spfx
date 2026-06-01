@@ -37,6 +37,15 @@
   border-radius: $phil-radius-lg;
 }
 
+// The inline Vimeo iframe fills the 16:9 frame.
+.playerIframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .playerPlaceholder {
   position: absolute;
   inset: 0;
@@ -61,8 +70,26 @@
   color: $phil-gray-600;
   line-height: 1.6;
   text-align: center;
-  // Preserve author line breaks in the info text (real content arrives Turn 2).
+  // Preserve author line breaks in the plain-text info field.
   white-space: pre-line;
+}
+
+// Open-on-click fallback (spec §4): visible under the player so a CSP/privacy
+// -blocked frame still has a working path to the video.
+.fallbackWrap {
+  margin-top: $phil-space-2;
+  text-align: center;
+}
+
+.openLink {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $phil-gray-600;
+  text-decoration: none;
+
+  &:hover {
+    color: $phil-red;
+  }
 }
 
 .message {
