@@ -57,6 +57,14 @@
           "manifest": "./src/webparts/phillipsMediaGallery/PhillipsMediaGalleryWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-highlight-video-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsHighlightVideo/PhillipsHighlightVideoWebPart.js",
+          "manifest": "./src/webparts/phillipsHighlightVideo/PhillipsHighlightVideoWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -68,6 +76,7 @@
     "PhillipsMediaCardWebPartStrings": "lib/webparts/phillipsMediaCard/loc/{locale}.js",
     "PhillipsWorldClockWebPartStrings": "lib/webparts/phillipsWorldClock/loc/{locale}.js",
     "PhillipsMediaGalleryWebPartStrings": "lib/webparts/phillipsMediaGallery/loc/{locale}.js",
+    "PhillipsHighlightVideoWebPartStrings": "lib/webparts/phillipsHighlightVideo/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

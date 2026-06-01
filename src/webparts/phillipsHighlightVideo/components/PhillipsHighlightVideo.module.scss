@@ -1,0 +1,73 @@
+// Highlight Video styles. Tokens come from the shared brand source — including
+// $phil-font-display (Barlow Condensed today, Montserrat once the I07 swap
+// lands). Nothing here hard-codes a font.
+@use '../../../styles/tokens' as *;
+
+.highlightVideo {
+  display: flex;
+  justify-content: center;
+  font-family: $phil-font-body;
+}
+
+// Centered featured block with a sensible max-width; the player is the focal point.
+.block {
+  width: 100%;
+  max-width: 760px;
+}
+
+.title {
+  margin: 0 0 $phil-space-4;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  text-align: center;
+}
+
+// 16:9 responsive container — the inline Vimeo iframe drops in here at Turn 2.
+.playerFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: $phil-gray-100;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-lg;
+}
+
+.playerPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $phil-space-2;
+  color: $phil-gray-600;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// Coral play glyph — a small on-brand accent on the placeholder.
+.playGlyph {
+  color: $phil-red;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.info {
+  margin-top: $phil-space-4;
+  color: $phil-gray-600;
+  line-height: 1.6;
+  text-align: center;
+  // Preserve author line breaks in the info text (real content arrives Turn 2).
+  white-space: pre-line;
+}
+
+.message {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 0.875rem;
+}

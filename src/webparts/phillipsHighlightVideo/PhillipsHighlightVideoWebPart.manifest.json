@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "2476225d-44bd-4d15-b5ac-3eec2c7aa8b3",
+  "alias": "PhillipsHighlightVideoWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Highlight Video" },
+      "description": {
+        "default": "Features a single list-selected video played inline (Vimeo) with a title and an info block. List-driven and field-mapped."
+      },
+      "officeFabricIconFontName": "Video",
+      "properties": {
+        "listId": "",
+        "itemId": 0,
+        "titleField": "Title",
+        "videoField": "Video",
+        "infoField": "HighlightInfo"
+      }
+    }
+  ]
+}
