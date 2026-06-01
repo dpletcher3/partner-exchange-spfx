@@ -65,6 +65,14 @@
           "manifest": "./src/webparts/phillipsHighlightVideo/PhillipsHighlightVideoWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-celebrations-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsCelebrations/PhillipsCelebrationsWebPart.js",
+          "manifest": "./src/webparts/phillipsCelebrations/PhillipsCelebrationsWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -77,6 +85,7 @@
     "PhillipsWorldClockWebPartStrings": "lib/webparts/phillipsWorldClock/loc/{locale}.js",
     "PhillipsMediaGalleryWebPartStrings": "lib/webparts/phillipsMediaGallery/loc/{locale}.js",
     "PhillipsHighlightVideoWebPartStrings": "lib/webparts/phillipsHighlightVideo/loc/{locale}.js",
+    "PhillipsCelebrationsWebPartStrings": "lib/webparts/phillipsCelebrations/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

@@ -1,0 +1,140 @@
+// Celebrations styles. Tokens from the shared brand source — including
+// $phil-font-display (Barlow Condensed today → Montserrat with the I07 swap).
+@use '../../../styles/tokens' as *;
+
+.celebrations {
+  font-family: $phil-font-body;
+}
+
+// --- Tabs (red-underline active motif) -------------------------------------
+.tabs {
+  display: flex;
+  gap: $phil-space-5;
+  border-bottom: 1px solid $phil-gray-200;
+  margin-bottom: $phil-space-5;
+}
+
+.tab {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: $phil-space-3 0;
+  margin-bottom: -1px; // overlap the tabs' bottom border
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $phil-gray-600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+
+  &:hover {
+    color: $phil-black;
+  }
+}
+
+.tabActive {
+  color: $phil-black;
+  // Signature Phillips red underline under the active tab.
+  border-bottom-color: $phil-red;
+}
+
+// --- Two-week calendar grid -------------------------------------------------
+.calendar {
+  width: 100%;
+}
+
+.weekHeader,
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: $phil-space-2;
+}
+
+.weekHeader {
+  margin-bottom: $phil-space-2;
+}
+
+.weekRow {
+  margin-bottom: $phil-space-2;
+}
+
+.weekdayCol {
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $phil-gray-600;
+  text-align: center;
+}
+
+.dayCell {
+  min-height: 96px;
+  padding: $phil-space-2;
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-md;
+  display: flex;
+  flex-direction: column;
+  gap: $phil-space-2;
+}
+
+.dayNum {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: $phil-gray-400;
+}
+
+// A person entry within a day cell: circular avatar + a name line.
+.person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $phil-space-1;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; // circular avatars
+  background-color: $phil-gray-100;
+  object-fit: cover;
+}
+
+.personLine {
+  width: 80%;
+  height: 8px;
+  border-radius: $phil-radius-sm;
+  background-color: $phil-gray-100;
+}
+
+// Placeholder shimmer for the Turn-1 shell.
+.placeholder {
+  animation: phil-celebrations-pulse 1.5s ease-in-out infinite;
+}
+
+// --- States ----------------------------------------------------------------
+.message {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 0.875rem;
+}
+
+@keyframes phil-celebrations-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+// Responsive: collapse the 7-column grid on narrow viewports so cells stay usable.
+@media (max-width: 700px) {
+  .weekHeader {
+    display: none;
+  }
+  .weekRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

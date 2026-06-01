@@ -1,0 +1,35 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "8e8a7d61-8c31-40db-ae4b-fcc270586d89",
+  "alias": "PhillipsCelebrationsWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Celebrations" },
+      "description": {
+        "default": "Tabbed Anniversaries / Birthdays calendar over a current-week + next-week window, with a Send a Wish action. List-driven and field-mapped."
+      },
+      "officeFabricIconFontName": "Cake",
+      "properties": {
+        "listId": "",
+        "personField": "LinkedUser",
+        "birthdayField": "BirthDate",
+        "hireField": "HireDate",
+        "communityUrl": "",
+        "weekStart": "sunday",
+        "defaultTab": "birthdays"
+      }
+    }
+  ]
+}
