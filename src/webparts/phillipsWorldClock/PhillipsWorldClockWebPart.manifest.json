@@ -1,0 +1,30 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "2a8c4f3e-5b6d-4a1c-9e2f-7d3b8c5a1e6f",
+  "alias": "PhillipsWorldClockWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Phillips World Clock" },
+      "description": {
+        "default": "Multi-timezone clock grid with editor-customizable titles per tile. Each tile shows local time (12-hour) and date (M/D) for an IANA timezone, updating across each minute boundary."
+      },
+      "officeFabricIconFontName": "World",
+      "properties": {
+        "sectionTitle": "",
+        "clocks": []
+      }
+    }
+  ]
+}

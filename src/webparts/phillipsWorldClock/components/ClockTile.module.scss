@@ -1,0 +1,60 @@
+@use '../../../styles/tokens' as *;
+
+.tile {
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  padding: $phil-space-3;
+  display: flex;
+  flex-direction: column;
+  // gap is small — the visual rhythm comes from font-size differences
+  // between title / time / date, not from generous vertical padding.
+  gap: 2px;
+}
+
+.title {
+  font-family: $phil-font-body;
+  font-size: 14px;
+  font-weight: 600;
+  color: $phil-black;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  // Truncate long titles rather than wrapping — keeps tile heights uniform
+  // so the grid doesn't develop ragged rows when one tile's title overflows.
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeRow {
+  display: flex;
+  align-items: baseline;
+  // The period sits to the right of the time with a small gap so it reads
+  // as a unit, not as a separate floating label.
+  gap: $phil-space-1;
+}
+
+.time {
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.15;
+  color: $phil-black;
+  letter-spacing: 0.01em;
+}
+
+.period {
+  font-family: $phil-font-body;
+  font-size: 12px;
+  font-weight: 600;
+  color: $phil-gray-600;
+  // Uppercase regardless of the source (en-US gives "AM"/"PM" already,
+  // but this guards against any future formatter swap).
+  text-transform: uppercase;
+}
+
+.date {
+  font-family: $phil-font-body;
+  font-size: 12px;
+  color: $phil-gray-600;
+}

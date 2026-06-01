@@ -1,0 +1,47 @@
+@use '../../../styles/tokens' as *;
+
+.container {
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-xl;
+  padding: $phil-space-5;
+  font-family: $phil-font-body;
+}
+
+.header {
+  margin-bottom: $phil-space-4;
+}
+
+// Section title matches the treatment used by Phillips List View so a hub
+// home page mixing list + clock + media-card section titles reads as a
+// single brand family.
+.title {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  padding-bottom: $phil-space-2;
+  border-bottom: 2px solid $phil-red;
+  // Inline-block so the underline matches the title's text width rather
+  // than spanning the whole container.
+  display: inline-block;
+}
+
+// auto-fit + minmax does the responsive heavy lifting on its own — at
+// narrow widths the columns collapse to one. No explicit media query
+// needed.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: $phil-space-4;
+}
+
+.unconfigured {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 14px;
+}
