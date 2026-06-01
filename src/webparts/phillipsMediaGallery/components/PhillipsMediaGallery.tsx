@@ -1,46 +1,75 @@
 import * as React from 'react';
+import { HttpClient } from '@microsoft/sp-http';
 
 import styles from './PhillipsMediaGallery.module.scss';
+import { PhillipsMediaGalleryService } from '../services/PhillipsMediaGalleryService';
+import { IFieldMapping, IMediaCardItem } from '../services/models';
 import { MediaGrid } from './MediaGrid';
 import { LoadingState } from './LoadingState';
 import { EmptyState } from './EmptyState';
 import { ErrorState } from './ErrorState';
 
+const LOG = '[MediaGallery]';
+
 export interface IPhillipsMediaGalleryProps {
+  service: PhillipsMediaGalleryService;
+  httpClient: HttpClient;
+  siteUrl: string;
+  listId: string;
+  mapping: IFieldMapping;
   columns: number;
   sectionTitle: string;
-  // True once a list is selected in the property pane. Turn 1 has no data layer,
-  // so this is the only signal that drives the placeholder/empty distinction.
-  hasList: boolean;
+  openInNewTab: boolean;
 }
 
 type Status = 'loading' | 'empty' | 'error' | 'loaded';
 
-// How many placeholder cards to render in the "loaded" state until Turn 2 wires
-// the real list service.
-const PLACEHOLDER_COUNT = 8;
+const SKELETON_COUNT = 8;
 
 export const PhillipsMediaGallery: React.FC<IPhillipsMediaGalleryProps> = (props) => {
   const [status, setStatus] = React.useState<Status>('loading');
+  const [items, setItems] = React.useState<IMediaCardItem[]>([]);
+  const [errorMessage, setErrorMessage] = React.useState<string>('');
 
-  // Stable per-instance id so the <h2> can be referenced by aria-labelledby.
   const headerId = React.useMemo(
     () => `phil-mg-title-${Math.random().toString(36).slice(2)}`,
     []
   );
 
-  // Turn 1 placeholder behavior: no real fetch yet. A list selection flips the
-  // gallery from the empty prompt to placeholder cards. Turn 2 replaces this
-  // effect with the list service that drives loading → loaded / empty / error.
-  React.useEffect(() => {
-    setStatus(props.hasList ? 'loaded' : 'empty');
-  }, [props.hasList]);
+  // Re-run when the list or any mapped field changes.
+  const m = props.mapping;
+  const depsKey = `${props.listId}|${m.titleField}|${m.videoField}|${m.labelImageField}|${m.mainImageField}`;
 
-  // Turn 2 will re-run the (not-yet-built) fetch. For Turn 1 this just re-derives
-  // the placeholder/empty status.
-  const retry = React.useCallback(() => {
-    setStatus(props.hasList ? 'loaded' : 'empty');
-  }, [props.hasList]);
+  const load = React.useCallback(() => {
+    if (!props.listId) {
+      setItems([]);
+      setStatus('empty');
+      return;
+    }
+    setStatus('loading');
+    props.service
+      .getItems(props.siteUrl, props.listId, props.mapping)
+      .then((result) => {
+        console.log(`${LOG} fetched ${result.length} items`);
+        if (!result.length) {
+          setItems([]);
+          setStatus('empty');
+        } else {
+          setItems(result);
+          setStatus('loaded');
+        }
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`${LOG} item fetch failed`, err);
+        setErrorMessage(msg);
+        setStatus('error');
+      });
+  }, [props.service, props.siteUrl, depsKey]);
+
+  React.useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <section
@@ -55,11 +84,24 @@ export const PhillipsMediaGallery: React.FC<IPhillipsMediaGalleryProps> = (props
         </div>
       )}
 
-      {status === 'loading' && <LoadingState columns={props.columns} count={PLACEHOLDER_COUNT} />}
-      {status === 'error' && <ErrorState message="" onRetry={retry} />}
-      {status === 'empty' && <EmptyState />}
+      {status === 'loading' && <LoadingState columns={props.columns} count={SKELETON_COUNT} />}
+      {status === 'error' && <ErrorState message={errorMessage} onRetry={load} />}
+      {status === 'empty' && (
+        <EmptyState
+          message={
+            props.listId
+              ? 'No items to show in this list yet.'
+              : 'Select a list in the property pane to show media cards.'
+          }
+        />
+      )}
       {status === 'loaded' && (
-        <MediaGrid columns={props.columns} placeholderCount={PLACEHOLDER_COUNT} />
+        <MediaGrid
+          items={items}
+          columns={props.columns}
+          openInNewTab={props.openInNewTab}
+          httpClient={props.httpClient}
+        />
       )}
     </section>
   );

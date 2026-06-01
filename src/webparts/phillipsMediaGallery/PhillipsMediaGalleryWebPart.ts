@@ -20,6 +20,8 @@ import {
 import * as strings from 'PhillipsMediaGalleryWebPartStrings';
 import { PhillipsMediaGallery, IPhillipsMediaGalleryProps } from './components/PhillipsMediaGallery';
 import { MediaGalleryFieldService, IColumnInfo } from './services/MediaGalleryFieldService';
+import { PhillipsMediaGalleryService } from './services/PhillipsMediaGalleryService';
+import { IFieldMapping } from './services/models';
 
 // @pnp/spfx-property-controls ships its own nested copy of
 // @microsoft/sp-component-base, so PropertyFieldListPicker's `context` prop type
@@ -52,22 +54,36 @@ type MappingProperty = 'titleField' | 'videoField' | 'labelImageField' | 'mainIm
 
 export default class PhillipsMediaGalleryWebPart extends BaseClientSideWebPart<IPhillipsMediaGalleryWebPartProps> {
   private _fieldService!: MediaGalleryFieldService;
+  private _dataService!: PhillipsMediaGalleryService;
   private _availableColumns: IColumnInfo[] = [];
   private _columnsLoadedFor: string | undefined = undefined;
   private _columnsLoading = false;
 
   protected onInit(): Promise<void> {
     this._fieldService = new MediaGalleryFieldService(this.context.spHttpClient);
+    this._dataService = new PhillipsMediaGalleryService(this.context.spHttpClient);
     return super.onInit();
   }
 
   public render(): void {
-    // Turn 1 is scaffold only — no list reads or thumbnail derivation yet (Turn
-    // 2). The component renders placeholder cards once a list is selected.
+    // Convention-with-override: apply the §2 defaults here so the data layer
+    // reads by real internal names even when the property is unset.
+    const mapping: IFieldMapping = {
+      titleField: this.properties.titleField || 'Title',
+      videoField: this.properties.videoField || 'Video',
+      labelImageField: this.properties.labelImageField || 'Image0',
+      mainImageField: this.properties.mainImageField || ''
+    };
+
     const props: IPhillipsMediaGalleryProps = {
+      service: this._dataService,
+      httpClient: this.context.httpClient,
+      siteUrl: this.context.pageContext.web.absoluteUrl,
+      listId: this.properties.listId || '',
+      mapping,
       columns: this._resolvedColumns,
       sectionTitle: this.properties.sectionTitle || '',
-      hasList: !!this.properties.listId
+      openInNewTab: this.properties.openInNewTab !== false
     };
 
     ReactDom.render(React.createElement(PhillipsMediaGallery, props), this.domElement);

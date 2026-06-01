@@ -63,6 +63,9 @@
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  // Card may render as an <a> (has video) or a <div> (no video).
+  text-decoration: none;
+  color: inherit;
 }
 
 .card:hover {
@@ -72,11 +75,24 @@
 }
 
 .mainVisual {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
+  overflow: hidden;
   background-color: $phil-gray-100;
-  background-size: cover;
-  background-position: center;
+}
+
+.mainVisualImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderFill {
+  width: 100%;
+  height: 100%;
+  background-color: $phil-gray-100;
 }
 
 .labelStrip {
@@ -84,6 +100,21 @@
   align-items: center;
   min-height: 44px;
   padding: $phil-space-3 $phil-space-4;
+}
+
+.labelImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.labelText {
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: $phil-black;
 }
 
 // Placeholder shimmer for Turn-1 cards and Turn-2 skeletons.
