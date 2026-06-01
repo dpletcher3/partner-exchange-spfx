@@ -1,0 +1,127 @@
+// Media Card Gallery styles.
+//
+// Tokens come from the shared brand source (`styles/tokens`) — including
+// $phil-font-display, which is Barlow Condensed today and becomes Montserrat
+// when the open I07 swap lands. Nothing here hard-codes a font.
+@use '../../../styles/tokens' as *;
+
+.mediaGallery {
+  font-family: $phil-font-body;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $phil-space-3;
+  margin-bottom: $phil-space-5;
+}
+
+.title {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  // Phillips-red 2px underline below the section heading (matches News).
+  padding-bottom: $phil-space-2;
+  border-bottom: 2px solid $phil-red;
+}
+
+// Card grid. The desktop column count is driven by --phil-mg-cols (set inline
+// from the Columns slider, 3–5). Narrow viewports collapse to 2 then 1 so the
+// cards never crush below a usable width.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--phil-mg-cols, 4), minmax(0, 1fr));
+  gap: $phil-space-4;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Card: smaller than News. 16:9 main visual + a compact label strip below,
+// rounded corners, soft shadow, red hover border with a subtle lift.
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-lg;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover {
+  border-color: $phil-red;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.mainVisual {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: $phil-gray-100;
+  background-size: cover;
+  background-position: center;
+}
+
+.labelStrip {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: $phil-space-3 $phil-space-4;
+}
+
+// Placeholder shimmer for Turn-1 cards and Turn-2 skeletons.
+.placeholder {
+  animation: phil-mg-pulse 1.5s ease-in-out infinite;
+}
+
+.placeholderLine {
+  display: block;
+  width: 70%;
+  height: 12px;
+  border-radius: $phil-radius-sm;
+  background-color: $phil-gray-100;
+}
+
+// Empty + error states share this centered message block.
+.message {
+  padding: $phil-space-6 $phil-space-4;
+  text-align: center;
+  color: $phil-gray-600;
+  font-size: 0.875rem;
+}
+
+.retryButton {
+  margin-top: $phil-space-3;
+  font-family: $phil-font-body;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: $phil-white;
+  background-color: $phil-red;
+  border: none;
+  border-radius: $phil-radius-pill;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+@keyframes phil-mg-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

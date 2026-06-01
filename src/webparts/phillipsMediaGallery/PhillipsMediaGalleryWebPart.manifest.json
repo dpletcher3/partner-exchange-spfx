@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "6a3cd17d-7a7f-488c-9e08-a1495e0c82cd",
+  "alias": "PhillipsMediaGalleryWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Media Card Gallery" },
+      "description": {
+        "default": "Renders a SharePoint list as a grid of media cards (video thumbnail + label graphic). Generic and remappable per instance."
+      },
+      "officeFabricIconFontName": "GridViewMedium",
+      "properties": {
+        "listId": "",
+        "columns": 4,
+        "sectionTitle": "",
+        "openInNewTab": true,
+        "titleField": "Title",
+        "videoField": "Video",
+        "labelImageField": "Image0",
+        "mainImageField": ""
+      }
+    }
+  ]
+}

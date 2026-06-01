@@ -49,6 +49,14 @@
           "manifest": "./src/webparts/phillipsWorldClock/PhillipsWorldClockWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-media-gallery-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsMediaGallery/PhillipsMediaGalleryWebPart.js",
+          "manifest": "./src/webparts/phillipsMediaGallery/PhillipsMediaGalleryWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -59,6 +67,7 @@
     "PhillipsListViewWebPartStrings": "lib/webparts/phillipsListView/loc/{locale}.js",
     "PhillipsMediaCardWebPartStrings": "lib/webparts/phillipsMediaCard/loc/{locale}.js",
     "PhillipsWorldClockWebPartStrings": "lib/webparts/phillipsWorldClock/loc/{locale}.js",
+    "PhillipsMediaGalleryWebPartStrings": "lib/webparts/phillipsMediaGallery/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }
