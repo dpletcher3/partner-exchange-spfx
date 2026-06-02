@@ -16,6 +16,7 @@ import {
 import * as strings from 'PhillipsCelebrationsWebPartStrings';
 import { PhillipsCelebrations, IPhillipsCelebrationsProps } from './components/PhillipsCelebrations';
 import { FieldMappingController, IFieldSlot } from '../../shared/fieldMapping';
+import { CelebrationsDataService, ICelebrationsMapping } from './services/CelebrationsDataService';
 
 // @pnp PropertyFieldListPicker's context type isn't structurally assignable from
 // WebPartContext (nested sp-component-base). Cast to the exact expected type.
@@ -37,6 +38,7 @@ export interface IPhillipsCelebrationsWebPartProps {
 
 export default class PhillipsCelebrationsWebPart extends BaseClientSideWebPart<IPhillipsCelebrationsWebPartProps> {
   private _mapping!: FieldMappingController;
+  private _data!: CelebrationsDataService;
 
   private get _slots(): IFieldSlot[] {
     return [
@@ -56,17 +58,28 @@ export default class PhillipsCelebrationsWebPart extends BaseClientSideWebPart<I
       refresh: () => this.context.propertyPane.refresh(),
       hintLabel: strings.FieldMappingEmptyLabel
     });
+    this._data = new CelebrationsDataService(this.context.spHttpClient);
     return super.onInit();
   }
 
   public render(): void {
-    // Turn 1 is scaffold only — no data, date logic, or real photos (Turn 2).
+    // Convention-with-override: apply the §2 defaults so the data layer reads by
+    // real internal names even when a mapping property is unset.
+    const mapping: ICelebrationsMapping = {
+      personField: this.properties.personField || 'LinkedUser',
+      birthdayField: this.properties.birthdayField || 'BirthDate',
+      hireField: this.properties.hireField || 'HireDate'
+    };
+
     const props: IPhillipsCelebrationsProps = {
-      hasList: !!this.properties.listId,
+      service: this._data,
+      siteUrl: this.context.pageContext.web.absoluteUrl,
+      listId: this.properties.listId || '',
+      mapping,
       weekStart: this.properties.weekStart === 'monday' ? 'monday' : 'sunday',
       defaultTab: this.properties.defaultTab === 'anniversaries' ? 'anniversaries' : 'birthdays'
     };
-    console.log(`${LOG} render: hasList=${props.hasList}, weekStart=${props.weekStart}, defaultTab=${props.defaultTab}`);
+    console.log(`${LOG} render: listId=${props.listId || '(none)'}, weekStart=${props.weekStart}, defaultTab=${props.defaultTab}`);
     ReactDom.render(React.createElement(PhillipsCelebrations, props), this.domElement);
   }
 

@@ -103,6 +103,42 @@
   object-fit: cover;
 }
 
+.personName {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: $phil-black;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.years {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $phil-red;
+}
+
+.wishBtn {
+  margin-top: $phil-space-1;
+  font-family: $phil-font-body;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $phil-white;
+  background-color: $phil-red;
+  border: none;
+  border-radius: $phil-radius-pill;
+  padding: 3px 8px;
+  cursor: pointer;
+
+  &:disabled {
+    background-color: $phil-gray-400;
+    cursor: default;
+  }
+}
+
 .personLine {
   width: 80%;
   height: 8px;

@@ -1,11 +1,16 @@
 import * as React from 'react';
 import styles from './PhillipsCelebrations.module.scss';
+import { CelebrationsDataService, ICelebrationPerson, ICelebrationsMapping } from '../services/CelebrationsDataService';
+import { buildCelebrations, ICelebrationEvent, ICelebrationsResult, WeekStart } from '../services/celebrationsCalendar';
 
 const LOG = '[Celebrations]';
 
 export interface IPhillipsCelebrationsProps {
-  hasList: boolean;
-  weekStart: 'sunday' | 'monday';
+  service: CelebrationsDataService;
+  siteUrl: string;
+  listId: string;
+  mapping: ICelebrationsMapping;
+  weekStart: WeekStart;
   defaultTab: 'birthdays' | 'anniversaries';
 }
 
@@ -15,27 +20,61 @@ type Status = 'configure' | 'loading' | 'error' | 'loaded';
 const WEEKDAYS_SUN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEKDAYS_MON = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-// Turn 1: scatter a few placeholder people across the shell so the grid + avatar
-// circles read as a calendar; most days empty. Turn 2 replaces with real data.
-const PLACEHOLDER_CELLS = new Set(['0-1', '0-4', '1-2', '1-5']);
-
 export const PhillipsCelebrations: React.FC<IPhillipsCelebrationsProps> = (props) => {
-  const [status, setStatus] = React.useState<Status>('loading');
+  const [status, setStatus] = React.useState<Status>('configure');
   const [tab, setTab] = React.useState<Tab>(props.defaultTab);
+  const [result, setResult] = React.useState<ICelebrationsResult | undefined>(undefined);
+  const [peopleById, setPeopleById] = React.useState<Map<number, ICelebrationPerson>>(new Map());
 
-  // Turn 1: a list selection flips configure → loaded (placeholder shell). Turn 2
-  // replaces this with the real Partner Profiles read + date logic.
+  const m = props.mapping;
+  const depsKey = `${props.listId}|${m.personField}|${m.birthdayField}|${m.hireField}|${props.weekStart}`;
+
+  const load = React.useCallback(() => {
+    if (!props.listId) {
+      setStatus('configure');
+      return;
+    }
+    setStatus('loading');
+    props.service
+      .getPeople(props.siteUrl, props.listId, props.mapping)
+      .then((people) => {
+        const map = new Map<number, ICelebrationPerson>(people.map((p) => [p.id, p]));
+        const res = buildCelebrations(
+          people.map((p) => ({ id: p.id, name: p.name, birthDate: p.birthDate, hireDate: p.hireDate })),
+          new Date(),
+          props.weekStart
+        );
+        res.eventsByDay.forEach((day) =>
+          day.forEach((ev) =>
+            console.log(
+              `${LOG} ${ev.name}: ${ev.type} on ${ev.date.toDateString()}${ev.years ? ` (${ev.years}y)` : ''}`
+            )
+          )
+        );
+        setPeopleById(map);
+        setResult(res);
+        setStatus('loaded');
+      })
+      .catch((err: unknown) => {
+        console.warn(`${LOG} load failed`, err);
+        setStatus('error');
+      });
+  }, [props.service, props.siteUrl, depsKey]);
+
   React.useEffect(() => {
-    const next: Status = props.hasList ? 'loaded' : 'configure';
-    setStatus(next);
-    console.log(`${LOG} status=${next}`);
-  }, [props.hasList]);
+    load();
+  }, [load]);
 
   React.useEffect(() => {
     setTab(props.defaultTab);
   }, [props.defaultTab]);
 
   const weekdays = props.weekStart === 'monday' ? WEEKDAYS_MON : WEEKDAYS_SUN;
+  const wantType = tab === 'birthdays' ? 'birthday' : 'anniversary';
+  const filtered: ICelebrationEvent[][] = result
+    ? result.eventsByDay.map((day) => day.filter((e) => e.type === wantType))
+    : [];
+  const total = filtered.reduce((n, d) => n + d.length, 0);
 
   return (
     <section className={styles.celebrations}>
@@ -71,7 +110,12 @@ export const PhillipsCelebrations: React.FC<IPhillipsCelebrationsProps> = (props
           Couldn’t load celebrations.
         </div>
       )}
-      {status === 'loaded' && (
+      {status === 'loaded' && result && total === 0 && (
+        <div className={styles.message}>
+          No {tab === 'birthdays' ? 'birthdays' : 'work anniversaries'} in the current or next week.
+        </div>
+      )}
+      {status === 'loaded' && result && total > 0 && (
         <div className={styles.calendar} aria-label={`${tab}: current week and next week`}>
           <div className={styles.weekHeader}>
             {weekdays.map((d) => (
@@ -83,18 +127,34 @@ export const PhillipsCelebrations: React.FC<IPhillipsCelebrationsProps> = (props
           {[0, 1].map((week) => (
             <div key={week} className={styles.weekRow}>
               {weekdays.map((_, col) => {
-                const key = `${week}-${col}`;
+                const i = week * 7 + col;
+                const day = result.window[i];
+                const events = filtered[i] || [];
                 return (
-                  <div key={key} className={styles.dayCell}>
+                  <div key={i} className={styles.dayCell}>
                     <div className={styles.dayNum} aria-hidden="true">
-                      —
+                      {day.getDate()}
                     </div>
-                    {PLACEHOLDER_CELLS.has(key) && (
-                      <div className={styles.person}>
-                        <div className={`${styles.avatar} ${styles.placeholder}`} aria-hidden="true" />
-                        <div className={`${styles.personLine} ${styles.placeholder}`} />
-                      </div>
-                    )}
+                    {events.map((ev) => {
+                      const person = peopleById.get(ev.personId);
+                      return (
+                        <div key={`${ev.personId}-${ev.type}`} className={styles.person}>
+                          {person && person.photoUrl ? (
+                            <img className={styles.avatar} src={person.photoUrl} alt={ev.name} />
+                          ) : (
+                            <div className={styles.avatar} aria-hidden="true" />
+                          )}
+                          <div className={styles.personName}>{ev.name}</div>
+                          {ev.type === 'anniversary' && ev.years && (
+                            <div className={styles.years}>{ev.years} {ev.years === 1 ? 'Year' : 'Years'}</div>
+                          )}
+                          {/* Send a Wish — non-functional placeholder; wired in Turn 3. */}
+                          <button type="button" className={styles.wishBtn} disabled>
+                            Send a Wish
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
