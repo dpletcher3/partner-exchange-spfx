@@ -22,6 +22,7 @@
       },
       "officeFabricIconFontName": "Video",
       "properties": {
+        "sectionHeader": "Practice of the Month",
         "listId": "",
         "itemId": 0,
         "titleField": "Title",

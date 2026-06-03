@@ -4,19 +4,48 @@
 @use '../../../styles/tokens' as *;
 
 .highlightVideo {
-  display: flex;
-  justify-content: center;
   font-family: $phil-font-body;
 }
 
-// Centered featured block with a sensible max-width; the player is the focal point.
+// Full-width container. The player frame inside fills the full container width
+// so it lines up with the full-width OOTB web parts on the page (e.g. the
+// Mission text web part). The centered title/info keep their previous readable
+// width via their own max-width caps below — only the player was widened.
 .block {
   width: 100%;
-  max-width: 760px;
 }
 
+// Section header — mirrors the Media Card Gallery's section header exactly
+// (own web-part SCSS, $phil-font-display uppercased, Phillips-red 2px underline)
+// so it reads identically to the OUR MISSION / OUR 15 PRACTICES section headers
+// that the customizer brand CSS styles on the same page.
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $phil-space-3;
+  margin-bottom: $phil-space-5;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  // Phillips-red 2px underline below the section heading (matches the gallery).
+  padding-bottom: $phil-space-2;
+  border-bottom: 2px solid $phil-red;
+}
+
+// Practice title ("BEING HEALTHY"): stays centered at its previous readable
+// width. The max-width cap moved here from .block so the title is unchanged
+// even though .block is now full width.
 .title {
-  margin: 0 0 $phil-space-4;
+  margin: 0 auto $phil-space-4;
+  max-width: 760px;
   font-family: $phil-font-display;
   font-weight: 700;
   font-size: 1.75rem;
@@ -66,7 +95,10 @@
 }
 
 .info {
-  margin-top: $phil-space-4;
+  // Centered at the previous readable width (cap moved off .block, which is now
+  // full width). Unchanged appearance — only the player was widened this turn.
+  margin: $phil-space-4 auto 0;
+  max-width: 760px;
   color: $phil-gray-600;
   line-height: 1.6;
   text-align: center;

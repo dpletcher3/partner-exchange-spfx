@@ -1,6 +1,7 @@
 declare interface IPhillipsHighlightVideoWebPartStrings {
   PropertyPaneDescription: string;
   ContentGroupName: string;
+  SectionHeaderFieldLabel: string;
   FieldMappingGroupName: string;
   FieldMappingEmptyLabel: string;
   ListFieldLabel: string;

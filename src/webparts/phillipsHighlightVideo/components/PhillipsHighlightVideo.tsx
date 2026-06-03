@@ -13,6 +13,9 @@ export interface IPhillipsHighlightVideoProps {
   listId: string;
   itemId: number;
   mapping: IFieldMapping;
+  // Optional section header above the title (e.g. "Practice of the Month").
+  // Empty string = no header (the part stays reusable without one).
+  sectionHeader: string;
 }
 
 type Status = 'configure' | 'loading' | 'error' | 'loaded';
@@ -22,6 +25,13 @@ export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (p
   const [item, setItem] = React.useState<IHighlightItem | undefined>(undefined);
   const [vimeoId, setVimeoId] = React.useState<string>('');
   const [errorMessage, setErrorMessage] = React.useState<string>('');
+
+  // Stable id linking the <section> to its header for aria-labelledby (mirrors
+  // the Media Card Gallery's section-header pattern).
+  const headerId = React.useMemo(
+    () => `phil-hv-header-${Math.random().toString(36).slice(2)}`,
+    []
+  );
 
   const m = props.mapping;
   const depsKey = `${props.listId}|${props.itemId}|${m.titleField}|${m.videoField}|${m.infoField}`;
@@ -67,8 +77,21 @@ export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (p
   }, [load]);
 
   return (
-    <section className={styles.highlightVideo}>
+    <section
+      className={styles.highlightVideo}
+      aria-labelledby={props.sectionHeader ? headerId : undefined}
+    >
       <div className={styles.block}>
+        {/* Section header above the title. Rendered only when non-empty so the
+            part stays reusable without one. Mirrors the Media Card Gallery. */}
+        {props.sectionHeader && (
+          <div className={styles.sectionHeader}>
+            <h2 id={headerId} className={styles.sectionTitle}>
+              {props.sectionHeader}
+            </h2>
+          </div>
+        )}
+
         {status === 'configure' && (
           <div className={styles.message}>
             Select a list and an item in the property pane to feature a video.

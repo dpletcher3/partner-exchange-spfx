@@ -6,7 +6,8 @@ import {
   IPropertyPaneField,
   IPropertyPaneDropdownOption,
   PropertyPaneLabel,
-  PropertyPaneDropdown
+  PropertyPaneDropdown,
+  PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import {
@@ -28,6 +29,9 @@ type PnpContext = Parameters<typeof PropertyFieldListPicker>[1]['context'];
 const LOG = '[HighlightVideo]';
 
 export interface IPhillipsHighlightVideoWebPartProps {
+  // Optional section header above the title (default "Practice of the Month",
+  // seeded via the manifest's preconfiguredEntries). Empty = no header.
+  sectionHeader: string;
   listId: string;
   // The featured item's ID (0 = none selected).
   itemId: number;
@@ -71,7 +75,10 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
       siteUrl: this.context.pageContext.web.absoluteUrl,
       listId: this.properties.listId || '',
       itemId: this.properties.itemId || 0,
-      mapping
+      mapping,
+      // Empty string when unset/cleared so the header is hidden (reusable
+      // without one); new instances are seeded from preconfiguredEntries.
+      sectionHeader: this.properties.sectionHeader || ''
     };
     ReactDom.render(React.createElement(PhillipsHighlightVideo, props), this.domElement);
   }
@@ -245,6 +252,9 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
             {
               groupName: strings.ContentGroupName,
               groupFields: [
+                PropertyPaneTextField('sectionHeader', {
+                  label: strings.SectionHeaderFieldLabel
+                }),
                 PropertyFieldListPicker('listId', {
                   label: strings.ListFieldLabel,
                   selectedList: this.properties.listId,
