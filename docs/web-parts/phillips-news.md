@@ -109,6 +109,61 @@ All four states must be visible during scaffold dev. After the build, loading an
 - "View all →" link has explicit text content, not just an icon.
 - Loading skeleton uses `aria-busy="true"` on the grid container.
 
+## Pipeline mode — data source toggle (I14, per D039)
+
+As of I14 the web part has a per-instance **data source** toggle. It is the first field in the Content group of the property pane (a `PropertyPaneChoiceGroup`, because it changes the meaning of every field below it):
+
+- **"News Repository list"** (`dataSource: 'list'`) — the original behavior, unchanged. **This is the default**, so existing deployed instances are untouched on upgrade.
+- **"SharePoint news pages"** (`dataSource: 'pipeline'`) — reads the SharePoint news pipeline: Site Pages where `PromotedState = 2`, covering both **News posts** and **News links**.
+
+Both sources sit behind the same `INewsRepositoryService` interface. The web part injects `NewsRepositoryService` or `NewsPipelineRepositoryService` in `onInit` based on `dataSource` (same seam as the existing `USE_MOCK_SERVICE` switch), and **re-injects** when the toggle changes in `onPropertyPaneFieldChanged`. **The display components are not modified** — pipeline mode produces the same `INewsItem` shape the cards already consume, and all cards keep `target="_blank"`.
+
+### Pipeline query
+
+```
+{sourceSiteUrl}/_api/web/lists/getbytitle('Site Pages')/items
+  ?$select=Id,Title,Description,FirstPublishedDate,PromotedState,FileRef,
+           BannerImageUrl,PhillipsNewsCategory,OData__SPSitePageFlags,OData__OriginalSourceUrl
+  &$orderby=FirstPublishedDate desc
+  &$top={maxItems | 100 when an item-type filter is active}
+  &$filter=PromotedState eq 2  [and (PhillipsNewsCategory eq '...' or ...)]
+```
+
+- **Category** is filtered **server-side** — `PhillipsNewsCategory` is single-Choice (I14 scope item 1), so there is **no client-side over-fetch ceiling** for category (unlike list mode's MultiChoice `Category`).
+- **Item type** (News post vs News link) is **derived**, not a stored column, so an item-type filter is applied **client-side** after mapping; when one is active the query over-fetches up to a 100-row ceiling, then filters and slices to `maxItems`.
+- If the `OData__`-prefixed link-detection fields are unavailable on a given library, the query **retries with the core field set** (warns once) and every page maps as a News post — a safe, non-fatal degrade.
+
+### Field mapping to `INewsItem`
+
+| `INewsItem` | Site Pages source | Notes |
+|---|---|---|
+| `id` | `Id` | |
+| `title` | `Title` | |
+| `shortDescription` | `Description` | |
+| `publishedDate` | `FirstPublishedDate` | |
+| `categories` | `PhillipsNewsCategory` | single-Choice wrapped in an array via `extractChoices`; `[]` when unset |
+| `thumbnailImageUrl` | `BannerImageUrl` | **new** `extractBannerImageUrl` (handles `{Url}` / bare string, warns on unexpected object). Does **not** reuse the list-mode `ThumbnailImage`+`AttachmentFiles` resolver and does **not** `$expand=AttachmentFiles`. |
+| `linkUrl` | derived | News post → `FileRef` made absolute (origin + server-relative path); News link → the external redirect URL. |
+| `itemType` | derived | `'News post'` or `'News link'`. |
+
+### Post-vs-link derivation (defensive)
+
+`derivePostOrLink` in [pipelineExtractors.ts](../../src/webparts/phillipsNews/services/pipelineExtractors.ts) consults two independent signals because neither is guaranteed across tenants/versions:
+
+1. A resolvable redirect URL (`OData__OriginalSourceUrl`) — **authoritative**: a News post never has one, so its presence ⇒ News link, `linkUrl` = that external URL.
+2. A `"News link"` token in `OData__SPSitePageFlags` — secondary.
+
+If the flags claim "News link" but no redirect URL resolves (unrecognized shape), the page **falls back to a News post** with a `console.warn`, rather than emitting a dead link — per the defensive contract.
+
+### Pipeline-mode property pane & header
+
+- **Category checkboxes** load the `PhillipsNewsCategory` choices from the Site Pages library (same `fields/getbytitle(...)?$select=Choices` pattern, different field). Choices are re-fetched when the toggle flips.
+- **Item-type dropdown** options in pipeline mode are `(any)` / `News post` / `News link` (from the pipeline service's `getItemTypes`).
+- The **Advanced `listTitle`** field is **hidden** in pipeline mode (meaningless there); **`sourceSiteUrl` remains** — the Phillips Loop instance will point pipeline mode at Our Culture.
+- **"+ Add news item"** repoints to native news authoring: `{site}/_layouts/15/CreateSitePage.aspx?pageType=News`.
+- **"View all →"** points to `{site}/SitePages/Forms/AllItems.aspx` instead of the list's `AllItems.aspx`.
+- Flipping the toggle **clears `categoryFilter` and resets `itemTypeFilter`** to `(any)`, because the two sources expose different category/item-type vocabularies and a stale selection would silently mis-filter.
+
 ## What's deferred
 
 - **+Add news item button** — its own turn (second-to-last in the build sequence: `scaffold → list service → cards → polish → +Add → deploy`).
@@ -171,6 +226,15 @@ Discovered against the real seeded `News Repository` list during the scaffold tu
 - **`LinkUrl` resolved empty at runtime despite a valid CLI shape.** CLI inspection (`odata.metadata=minimal`) shows `LinkUrl` as a structured `{ Url, Description }` object with `Url` populated, and `SPHttpClient` negotiates the same metadata level — yet the rendered card anchor had an empty `href`, meaning the runtime value reached the mapper in a different shape. The service now extracts the URL **defensively** via `extractUrl()`, handling both a `{ Url }` object and a bare string, and emitting a `console.warn('[PhillipsNews] Unexpected LinkUrl shape', …)` only when it receives an object with no `Url` (silent on the happy path, so the console stays clean). Confirming the precise runtime shape and removing the defensive fallback is polish-turn cleanup.
 - **`ShortDescription` is empty on the seeded items** (`null` in REST). Not a bug — a content gap. Cards correctly render no description until the column is populated; truncation is at ~120 chars.
 - **List has a leftover default `Choice 3`** in both the Category and ItemType columns (list-creation artifact). Cosmetic; the web part renders whatever choices the columns expose. Worth cleaning up in the list config, out of scope for this turn.
+
+## I14 pipeline-mode deviations (2026-06-05)
+
+Discovered while implementing the data source toggle (I14 scope item 2, per **D039** in the `partner-exchange-provisioning` repo's `decisions.md`). Reflected here per the "do not let the code and the doc drift" rule.
+
+- **Runtime field shapes for the News-link signal were not live-verified at code time.** The m365 CLI session token had expired (conditional-access sign-in-frequency lapse), so the exact runtime shapes of `OData__OriginalSourceUrl` and `OData__SPSitePageFlags` on the live Site Pages libraries could not be probed before writing the mapper. This is *by design tolerable*: D039/the prompt mandate a **defensive** derivation, so the code does not hard-assert one shape — `derivePostOrLink` treats a present redirect URL as authoritative, treats the flags as secondary, and falls back to "News post" + `console.warn` on any unrecognized shape. The pipeline query also **retries with a core field set** if the `OData__` columns are absent. Live confirmation of the precise shapes lands in **I14 item 3** (pilot flip + authoring a real News post and News link on the hub).
+- **Item-type filtering is client-side; category filtering is server-side.** `PhillipsNewsCategory` is single-Choice → server-side `$filter` with no over-fetch ceiling. Item type (News post vs News link) is **derived**, not a column, so it cannot be filtered server-side; when an item-type filter is active the service over-fetches up to a 100-row ceiling, then filters and slices. (The "no over-fetch ceiling" guarantee in D039 was specific to the category dimension.)
+- **Toggling the data source clears the category and item-type filters.** The two sources expose different vocabularies (News Repository `Category` values vs `PhillipsNewsCategory` choices; `Article/Announcement/...` vs `News post/News link`), so carrying a selection across a toggle would silently mis-filter. The handler resets `categoryFilter = []` and `itemTypeFilter = '(any)'` on change.
+- **Deploy + per-site upgrade were deferred to a re-authenticated session.** The 1.0.16.0 `.sppkg` was built and packaged locally (96 unit tests pass, including 24 new `pipelineExtractors` tests), but uploading to the tenant App Catalog and upgrading the per-site instances requires an interactive `m365 login` that was not available at build time. **This turn ends at "packaged + local build green"; the App Catalog deploy, per-site upgrade, and the list-mode browser regression are the gating steps before commit.** No instance is flipped to pipeline mode this turn (that is I14 item 3).
 
 ## Polish-turn backlog
 

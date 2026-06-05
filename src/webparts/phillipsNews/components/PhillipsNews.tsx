@@ -8,9 +8,13 @@ import { LoadingState } from './LoadingState';
 import { EmptyState } from './EmptyState';
 import { ErrorState } from './ErrorState';
 import { AddNewsItemButton } from './AddNewsItemButton';
+import { DataSource } from '../config/constants';
 
 export interface IPhillipsNewsProps {
   service: INewsRepositoryService;
+  // Selects list vs news-pipeline behavior for the header affordances (the data
+  // itself arrives via `service`, which the web part injects per dataSource).
+  dataSource: DataSource;
   sectionTitle: string;
   categoryFilter: string[];
   itemTypeFilter: string;
@@ -75,7 +79,7 @@ export const PhillipsNews: React.FC<IPhillipsNewsProps> = (props) => {
     load();
   }, [load]);
 
-  const viewAllUrl = buildViewAllUrl(props.sourceSiteUrl, props.listTitle);
+  const viewAllUrl = buildViewAllUrl(props.sourceSiteUrl, props.listTitle, props.dataSource);
   const hasHeader = !!props.sectionTitle || props.showViewAllLink || props.isEditMode;
 
   return (
@@ -98,6 +102,7 @@ export const PhillipsNews: React.FC<IPhillipsNewsProps> = (props) => {
               <AddNewsItemButton
                 sourceSiteUrl={props.sourceSiteUrl}
                 listTitle={props.listTitle}
+                dataSource={props.dataSource}
               />
             )}
             {props.showViewAllLink && (
@@ -117,7 +122,12 @@ export const PhillipsNews: React.FC<IPhillipsNewsProps> = (props) => {
   );
 };
 
-function buildViewAllUrl(siteUrl: string, listTitle: string): string {
+function buildViewAllUrl(siteUrl: string, listTitle: string, dataSource: DataSource): string {
   const trimmed = siteUrl.replace(/\/+$/, '');
+  if (dataSource === 'pipeline') {
+    // Pipeline mode reads the Site Pages library; point "View all" at that
+    // library's view rather than the News Repository list view.
+    return `${trimmed}/SitePages/Forms/AllItems.aspx`;
+  }
   return `${trimmed}/Lists/${encodeURIComponent(listTitle)}/AllItems.aspx`;
 }

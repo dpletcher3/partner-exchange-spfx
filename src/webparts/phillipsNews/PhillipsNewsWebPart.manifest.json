@@ -24,6 +24,7 @@
       },
       "officeFabricIconFontName": "News",
       "properties": {
+        "dataSource": "list",
         "sectionTitle": "",
         "categoryFilter": [],
         "itemTypeFilter": "(any)",

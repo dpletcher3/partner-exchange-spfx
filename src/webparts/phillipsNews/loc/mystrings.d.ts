@@ -2,6 +2,9 @@ declare interface IPhillipsNewsWebPartStrings {
   PropertyPaneDescription: string;
   ContentGroupName: string;
   AdvancedGroupName: string;
+  DataSourceFieldLabel: string;
+  DataSourceListLabel: string;
+  DataSourcePipelineLabel: string;
   SectionTitleFieldLabel: string;
   CategoryFilterFieldLabel: string;
   CategoryFilterEmptyLabel: string;
