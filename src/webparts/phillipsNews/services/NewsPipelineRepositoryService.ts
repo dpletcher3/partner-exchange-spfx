@@ -65,13 +65,17 @@ export class NewsPipelineRepositoryService implements INewsRepositoryService {
   public constructor(private readonly _spHttpClient: SPHttpClient) {}
 
   public async getCategories(siteUrl: string, _listTitle: string): Promise<string[]> {
-    // Reads the PhillipsNewsCategory choices from the Site Pages library —
-    // same fields/getbytitle(...)/Choices pattern as list mode, different
-    // library and field. _listTitle is ignored: pipeline mode always targets
-    // the Site Pages library.
+    // Reads the PhillipsNewsCategory choices from the Site Pages library.
+    // _listTitle is ignored: pipeline mode always targets the Site Pages
+    // library. NOTE: the field lookup uses getByInternalNameOrTitle, NOT
+    // getbytitle — on a *field*, getbytitle matches the field's Title (display
+    // name "News Category"), so passing the internal name "PhillipsNewsCategory"
+    // 404s with "Field with name PhillipsNewsCategory was not found". The list
+    // lookup (getbytitle on 'Site Pages') is unchanged — getbytitle is correct
+    // for lists, where the title is the addressable name.
     const url = `${trimTrailingSlash(siteUrl)}/_api/web/lists/getbytitle('${encodeListTitle(
       SITE_PAGES_LIBRARY_TITLE
-    )}')/fields/getbytitle('${NEWS_CATEGORY_FIELD}')?$select=Choices`;
+    )}')/fields/getByInternalNameOrTitle('${NEWS_CATEGORY_FIELD}')?$select=Choices`;
 
     const response = await this._spHttpClient.get(url, SPHttpClient.configurations.v1);
     if (!response.ok) {

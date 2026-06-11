@@ -123,9 +123,16 @@ export class NewsRepositoryService implements INewsRepositoryService {
     listTitle: string,
     fieldName: string
   ): Promise<string[]> {
+    // getByInternalNameOrTitle (not getbytitle) for the FIELD lookup: on a
+    // field, getbytitle matches the field's Title, not its internal name. Here
+    // the columns ('Category', 'ItemType') have matching title and internal
+    // name, so this is behavior-preserving — but it's the correct method and
+    // keeps this seam robust if a list column's title ever diverges from its
+    // internal name (the exact trap that broke pipeline mode). The list lookup
+    // (getbytitle on the list) is unchanged — getbytitle is correct for lists.
     const url = `${trimTrailingSlash(siteUrl)}/_api/web/lists/getbytitle('${encodeListTitle(
       listTitle
-    )}')/fields/getbytitle('${fieldName}')?$select=Choices`;
+    )}')/fields/getByInternalNameOrTitle('${fieldName}')?$select=Choices`;
 
     const response: SPHttpClientResponse = await this._spHttpClient.get(
       url,

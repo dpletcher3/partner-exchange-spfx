@@ -8,7 +8,7 @@ define([], function() {
     "DataSourcePipelineLabel": "SharePoint news pages",
     "SectionTitleFieldLabel": "Section title",
     "CategoryFilterFieldLabel": "Filter by category",
-    "CategoryFilterEmptyLabel": "Categories load from the list when the pane opens.",
+    "CategoryFilterEmptyLabel": "Categories load from the selected data source when the pane opens.",
     "ItemTypeFilterFieldLabel": "Filter by item type",
     "MaxItemsFieldLabel": "Maximum items",
     "ShowViewAllLinkFieldLabel": "Show \"View all\" link",
