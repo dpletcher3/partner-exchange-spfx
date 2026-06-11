@@ -11,6 +11,7 @@ declare interface IPhillipsPersonalizedHeroWebPartStrings {
   GreetingSizeFieldLabel: string;
   GreetingWeightFieldLabel: string;
   GreetingAlignmentFieldLabel: string;
+  GreetingVerticalPositionFieldLabel: string;
 }
 
 declare module 'PhillipsPersonalizedHeroWebPartStrings' {

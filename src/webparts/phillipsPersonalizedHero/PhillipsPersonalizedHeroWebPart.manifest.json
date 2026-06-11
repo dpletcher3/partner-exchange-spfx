@@ -31,7 +31,8 @@
         "greetingColor": "#FFFFFF",
         "greetingSize": 42,
         "greetingWeight": 500,
-        "greetingAlignment": "Left"
+        "greetingAlignment": "Left",
+        "greetingVerticalPosition": 0
       }
     }
   ]

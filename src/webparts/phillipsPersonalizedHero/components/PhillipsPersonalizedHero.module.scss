@@ -2,9 +2,11 @@
 
 .hero {
   display: flex;
-  // Column so the greeting pins to the top and the date/time to the bottom.
+  // Column so the date/time pins to the bottom (via its margin-top: auto). The
+  // greeting is absolutely positioned (top: {greetingVerticalPosition}%) and so
+  // leaves the flex flow — `position: relative` here is its positioning context.
   flex-direction: column;
-  justify-content: space-between;
+  position: relative;
   box-sizing: border-box;
   // Vertical padding keeps the greeting/date-time off the top/bottom edges;
   // tighter on small viewports.
@@ -56,6 +58,9 @@
 // greetingColor, applied inline.
 .dateTime {
   margin: 0;
+  // Pin to the bottom of the flex column now that .hero no longer uses
+  // justify-content: space-between (the greeting left the flow).
+  margin-top: auto;
   font-family: $phil-font-display;
   font-size: 16px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);

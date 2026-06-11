@@ -11,6 +11,7 @@ define([], function() {
     "GreetingColorFieldLabel": "Greeting color",
     "GreetingSizeFieldLabel": "Greeting size (px)",
     "GreetingWeightFieldLabel": "Greeting weight",
-    "GreetingAlignmentFieldLabel": "Greeting alignment"
+    "GreetingAlignmentFieldLabel": "Greeting alignment",
+    "GreetingVerticalPositionFieldLabel": "Greeting vertical position (%)"
   }
 });

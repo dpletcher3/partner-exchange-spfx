@@ -17,6 +17,7 @@ export interface IPhillipsPersonalizedHeroProps {
   greetingSize: number;
   greetingWeight: number;
   greetingAlignment: GreetingAlignment;
+  greetingVerticalPosition: number;
   displayName?: string;
   isEditMode: boolean;
 }
@@ -72,6 +73,8 @@ export const PhillipsPersonalizedHero: React.FC<IPhillipsPersonalizedHeroProps> 
             color={props.greetingColor}
             sizePx={props.greetingSize}
             weight={props.greetingWeight}
+            verticalPositionPct={props.greetingVerticalPosition}
+            alignment={props.greetingAlignment}
           />
           <DateTime color={props.greetingColor} />
         </>

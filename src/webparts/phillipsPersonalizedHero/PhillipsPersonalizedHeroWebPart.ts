@@ -58,6 +58,7 @@ export interface IPhillipsPersonalizedHeroWebPartProps {
   greetingSize: number;
   greetingWeight: number;
   greetingAlignment: string;
+  greetingVerticalPosition: number;
 }
 
 export default class PhillipsPersonalizedHeroWebPart extends BaseClientSideWebPart<IPhillipsPersonalizedHeroWebPartProps> {
@@ -75,6 +76,7 @@ export default class PhillipsPersonalizedHeroWebPart extends BaseClientSideWebPa
         greetingSize: this.properties.greetingSize || 42,
         greetingWeight: this.properties.greetingWeight || 500,
         greetingAlignment: (this.properties.greetingAlignment as GreetingAlignment) || 'Left',
+        greetingVerticalPosition: this.properties.greetingVerticalPosition || 0,
         displayName: this.context.pageContext.user.displayName,
         isEditMode: this.displayMode === DisplayMode.Edit
       }
@@ -200,6 +202,13 @@ export default class PhillipsPersonalizedHeroWebPart extends BaseClientSideWebPa
                     { key: 'Center', text: 'Center' },
                     { key: 'Right', text: 'Right' }
                   ]
+                }),
+                PropertyPaneSlider('greetingVerticalPosition', {
+                  label: strings.GreetingVerticalPositionFieldLabel,
+                  min: 0,
+                  max: 100,
+                  step: 1,
+                  showValue: true
                 })
               ]
             }
