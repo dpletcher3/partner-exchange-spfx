@@ -253,3 +253,17 @@ body,
 #spSiteHeader {
   display: none !important;
 }
+
+/* I15 / D041 — hide the redundant family-level SharePoint hub nav strip.
+   The BrandedHeader (rendered into the Top placeholder) already shows the
+   family nav, sourced from the hub root's TopNavigationBar — so SharePoint's
+   own ms-HubNav strip below it is a duplicate ON THE FAMILY HUB ONLY.
+   Sub-hubs (The Hub, department sites) render their own unique nav in the
+   same ms-HubNav container (e.g. the human-authored Support grouping), which
+   MUST be preserved. We therefore scope the hide to the family hub by its
+   URL: the hub nameLink href ends with /sites/PartnerExchange-Sandbox.
+   Keyed on URL (not the shifting hubNavRow-NNN class, not the rename-fragile
+   aria-label). Sandbox-only; prod URL handled at I10. */
+.ms-HubNav:has(a.ms-HubNav-nameLink[href$="/sites/PartnerExchange-Sandbox"]) {
+  display: none !important;
+}
