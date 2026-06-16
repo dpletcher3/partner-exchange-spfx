@@ -23,10 +23,13 @@ export interface IGreetingProps {
   alignment: GreetingAlignment;
 }
 
-// The page-level greeting heading. Renders "{phrase}, {firstName}" when a name
-// is available, otherwise just "{phrase}" (no trailing comma/space).
+// The page-level greeting heading. Renders "{phrase}, {firstName}!" when a name
+// is available, otherwise just "{phrase}!" (no trailing comma/space before the
+// "!"). The single "!" is appended once to the fully assembled greeting, so it
+// applies to every time-of-day variant and to the no-name fallback without
+// being duplicated per-variant.
 export const Greeting: React.FC<IGreetingProps> = (props) => {
-  const text = props.firstName ? `${props.phrase}, ${props.firstName}` : props.phrase;
+  const text = (props.firstName ? `${props.phrase}, ${props.firstName}` : props.phrase) + '!';
 
   // Absolute positioning (merged with the font styles in styles.greeting):
   // vertical from the slider, horizontal anchored by alignment.
