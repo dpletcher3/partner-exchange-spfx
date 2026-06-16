@@ -92,6 +92,13 @@ export const MediaCard: React.FC<IMediaCardProps> = ({ item, openInNewTab, httpC
         ) : (
           <div className={`${styles.placeholderFill} ${styles.placeholder}`} aria-hidden="true" />
         )}
+        {item.videoUrl ? (
+          <span className={styles.playBadge} aria-hidden="true">
+            <svg className={styles.playIcon} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M8 5v14l11-7z" fill="currentColor" />
+            </svg>
+          </span>
+        ) : null}
       </div>
       <div className={styles.labelStrip}>
         {item.labelImageUrl ? (

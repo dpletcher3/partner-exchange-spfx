@@ -102,6 +102,45 @@
   background-color: $phil-gray-100;
 }
 
+// Circular play-indicator badge, centered on the thumbnail. MediaCard renders
+// it only on cards that have a video, so it doubles as a "this card is
+// clickable" affordance. Decorative — the card's <a aria-label> conveys the
+// action to assistive tech, so the badge is aria-hidden.
+.playBadge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: $phil-radius-pill;
+  // Literal rgba: brand red (#F9423A) at ~85% so the thumbnail art reads
+  // through the badge. No overlay/scrim token exists in _tokens.scss; an
+  // overlay token is deferred to the token-audit pass (per D043 rationale).
+  background-color: rgba(249, 66, 58, 0.85);
+  color: $phil-white;
+  pointer-events: none; // badge is decorative; the parent <a> owns the click
+  transition: background-color 0.15s ease;
+}
+
+.playIcon {
+  width: 24px;
+  height: 24px;
+  // optical centering: the triangle's visual mass sits slightly left of the
+  // glyph box, so nudge right to center it in the circle
+  margin-left: 2px;
+}
+
+// On card hover, solidify the badge to full brand red. Flat selector to match
+// this file's existing .card:hover / .card:focus-visible pattern.
+.card:hover .playBadge {
+  // on hover, solidify to full brand red
+  background-color: $phil-red;
+}
+
 .labelStrip {
   display: flex;
   align-items: center;
