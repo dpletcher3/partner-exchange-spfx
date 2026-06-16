@@ -40,11 +40,13 @@
   border-bottom: 2px solid $phil-red;
 }
 
-// Practice title ("BEING HEALTHY"): stays centered at its previous readable
-// width. The max-width cap moved here from .block so the title is unchanged
-// even though .block is now full width.
+// Practice title ("BEING HEALTHY"): left-aligned and flush-left, kept at its
+// previous readable width. The max-width cap lives here (moved from .block,
+// which is now full width); the 760px block is left-anchored (margin-left 0, no
+// horizontal auto-centering) so its left edge lines up with the section header
+// and the video card.
 .title {
-  margin: 0 auto $phil-space-4;
+  margin: 0 0 $phil-space-4;
   max-width: 760px;
   font-family: $phil-font-display;
   font-weight: 700;
@@ -52,7 +54,7 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: $phil-black;
-  text-align: center;
+  text-align: left;
 }
 
 // 16:9 responsive container — the inline Vimeo iframe drops in here at Turn 2.
