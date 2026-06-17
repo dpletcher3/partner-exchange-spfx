@@ -1,0 +1,67 @@
+// Document Cards — Stage A styles. Deliberately MINIMAL: only the column grid
+// driven by the --phil-dc-cols custom property (set inline from the configured
+// column count, 1–4). No card chrome, colors, or header icons yet — those land
+// in Stage B. The shared brand tokens are imported only for the grid gap so no
+// raw spacing value is hardcoded.
+@use '../../../styles/tokens' as *;
+
+.documentCards {
+  font-family: $phil-font-body;
+}
+
+// Column grid. The desktop column count is driven by --phil-dc-cols (set inline
+// from the per-column config length, 1–4). Narrow viewports collapse to 1 so the
+// columns never crush.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--phil-dc-cols, 3), minmax(0, 1fr));
+  gap: $phil-space-4;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.column {
+  min-width: 0;
+}
+
+.columnHeader {
+  margin: 0 0 $phil-space-3 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  margin-bottom: $phil-space-3;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.iconPlaceholder {
+  color: $phil-gray-400;
+}
+
+.title {
+  margin-left: $phil-space-2;
+}
+
+.description {
+  color: $phil-gray-600;
+}
+
+.message {
+  color: $phil-gray-600;
+}

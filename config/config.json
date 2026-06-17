@@ -73,6 +73,14 @@
           "manifest": "./src/webparts/phillipsCelebrations/PhillipsCelebrationsWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-document-cards-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsDocumentCards/PhillipsDocumentCardsWebPart.js",
+          "manifest": "./src/webparts/phillipsDocumentCards/PhillipsDocumentCardsWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -86,6 +94,7 @@
     "PhillipsMediaGalleryWebPartStrings": "lib/webparts/phillipsMediaGallery/loc/{locale}.js",
     "PhillipsHighlightVideoWebPartStrings": "lib/webparts/phillipsHighlightVideo/loc/{locale}.js",
     "PhillipsCelebrationsWebPartStrings": "lib/webparts/phillipsCelebrations/loc/{locale}.js",
+    "PhillipsDocumentCardsWebPartStrings": "lib/webparts/phillipsDocumentCards/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }
