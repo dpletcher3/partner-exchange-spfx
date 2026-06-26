@@ -1,8 +1,12 @@
-// Document Cards — Stage A styles. Deliberately MINIMAL: only the column grid
-// driven by the --phil-dc-cols custom property (set inline from the configured
-// column count, 1–4). No card chrome, colors, or header icons yet — those land
-// in Stage B. The shared brand tokens are imported only for the grid gap so no
-// raw spacing value is hardcoded.
+// Document Cards — Stage B styles. Card chrome + per-column accent + per-card
+// icon slot with a fallback glyph. Tokens only (no raw hex, no inline
+// font-family per the _tokens.scss hard rule); raw font-size values are edited
+// in place per D043 (no type-scale token until the token-audit pass).
+//
+// The per-column accent color arrives as the custom property --phil-dc-accent,
+// set inline on each .column from the author's PropertyFieldColorPicker value.
+// Every accent consumer reads var(--phil-dc-accent, #{$phil-red}) so an unset
+// color falls back to brand red.
 @use '../../../styles/tokens' as *;
 
 .documentCards {
@@ -29,8 +33,30 @@
   min-width: 0;
 }
 
+// Column header follows the brand section-heading pattern (display font,
+// uppercase, 2px underline) used by PhillipsNews / PhillipsMediaGallery — but
+// the underline takes the per-column accent instead of a fixed red.
 .columnHeader {
-  margin: 0 0 $phil-space-3 0;
+  display: flex;
+  align-items: center;
+  gap: $phil-space-2;
+  margin: 0 0 $phil-space-4 0;
+  padding-bottom: $phil-space-2;
+  font-family: $phil-font-display;
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $phil-black;
+  border-bottom: 2px solid var(--phil-dc-accent, #{$phil-red});
+}
+
+// Optional per-column header icon (Fabric ms-Icon font glyph), tinted to the
+// accent. Renders only when the author set an icon name.
+.columnHeaderIcon {
+  color: var(--phil-dc-accent, #{$phil-red});
+  font-size: 1.1em;
+  line-height: 1;
 }
 
 .list {
@@ -43,25 +69,92 @@
   margin-bottom: $phil-space-3;
 }
 
-.icon {
-  width: 24px;
-  height: 24px;
-  object-fit: cover;
-  vertical-align: middle;
+.item:last-child {
+  margin-bottom: 0;
 }
 
-.iconPlaceholder {
-  color: $phil-gray-400;
+// Card: the whole surface is the click target (matches PhillipsNews). White
+// surface, hairline border, rounded corners (radius-lg, the repo's card
+// radius), padded. Hover darkens the border to the column accent.
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: $phil-space-3;
+  padding: $phil-space-3 $phil-space-4;
+  background-color: $phil-white;
+  border: 1px solid $phil-gray-200;
+  border-radius: $phil-radius-lg;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease-out;
+}
+
+.card:hover {
+  border-color: var(--phil-dc-accent, #{$phil-red});
+}
+
+.card:hover .title {
+  text-decoration: underline;
+}
+
+// Keyboard focus ring for the clickable card.
+.card:focus-visible {
+  outline: 2px solid var(--phil-dc-accent, #{$phil-red});
+  outline-offset: 2px;
+}
+
+// Fixed square icon slot so the CardIcon image and the fallback glyph share the
+// SAME footprint — cards with and without an icon line up identically (no
+// layout shift). Red-tint background + radius-md follow the Quick Links
+// icon-in-square domain pattern; the glyph inherits the accent via currentColor.
+.iconWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: $phil-radius-md;
+  background-color: $phil-red-tint;
+  color: var(--phil-dc-accent, #{$phil-red});
+  overflow: hidden;
+}
+
+.icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallbackGlyph {
+  width: 22px;
+  height: 22px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: $phil-space-1;
+  // Let long titles / descriptions wrap inside the card instead of pushing the
+  // card wider than its grid track.
+  min-width: 0;
 }
 
 .title {
-  margin-left: $phil-space-2;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: $phil-black;
 }
 
 .description {
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: $phil-gray-600;
 }
 
 .message {
   color: $phil-gray-600;
+  font-size: 0.875rem;
 }

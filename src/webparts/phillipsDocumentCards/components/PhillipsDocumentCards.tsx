@@ -7,6 +7,20 @@ import { IFieldMapping, IDocCardItem, IDocColumnConfig } from '../services/model
 const LOG = '[DocumentCards]';
 const MAX_COLUMNS = 4;
 
+// Generic document fallback glyph, shown in the card icon slot when an item has
+// no CardIcon image. Inline SVG to match the repo's existing icon idiom (the
+// Media Gallery play badge) — no Fluent React import, no FluentProvider. Fills
+// with currentColor so it inherits the column accent set on the icon wrapper.
+// Decorative: aria-hidden, the title link carries the accessible name.
+const DocumentGlyph: React.FC = () => (
+  <svg className={styles.fallbackGlyph} viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.5L17.5 8H14V4.5zM8 10h4v1.5H8V10zm0 3h8v1.5H8V13zm0 3h8v1.5H8V16z"
+    />
+  </svg>
+);
+
 export interface IPhillipsDocumentCardsProps {
   service: PhillipsDocumentCardsService;
   siteUrl: string;
@@ -92,30 +106,48 @@ export const PhillipsDocumentCards: React.FC<IPhillipsDocumentCardsProps> = (pro
     <div className={styles.documentCards}>
       {loading && <p className={styles.message}>Loading…</p>}
       <div className={styles.grid} style={gridStyle}>
-        {columns.map((col, idx) => (
-          <div key={idx} className={styles.column}>
-            <h3 className={styles.columnHeader}>{col.config.header || col.config.filterValue}</h3>
-            {col.error && <p className={styles.message}>Error: {col.error}</p>}
-            {!col.error && col.items.length === 0 && (
-              <p className={styles.message}>No documents in &quot;{col.config.filterValue}&quot;.</p>
-            )}
-            <ul className={styles.list}>
-              {col.items.map((item) => (
-                <li key={item.id} className={styles.item}>
-                  {item.iconUrl ? (
-                    <img className={styles.icon} src={item.iconUrl} alt="" />
-                  ) : (
-                    <span className={styles.iconPlaceholder}>[icon]</span>
-                  )}
-                  <a className={styles.title} href={item.docUrl}>
-                    {item.title}
-                  </a>
-                  <div className={styles.description}>{item.description}</div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {columns.map((col, idx) => {
+          // Per-column accent: set the custom property only when the author
+          // picked a color; otherwise the SCSS var() fallback resolves to
+          // --phil-red. Both --phil-dc-cols and this are custom properties, so
+          // the cast matches the gridStyle pattern above.
+          const columnStyle = (
+            col.config.color ? { ['--phil-dc-accent']: col.config.color } : {}
+          ) as React.CSSProperties;
+          return (
+            <div key={idx} className={styles.column} style={columnStyle}>
+              <h3 className={styles.columnHeader}>
+                {col.config.iconName && (
+                  <i className={`ms-Icon ms-Icon--${col.config.iconName} ${styles.columnHeaderIcon}`} aria-hidden="true" />
+                )}
+                <span>{col.config.header || col.config.filterValue}</span>
+              </h3>
+              {col.error && <p className={styles.message}>Error: {col.error}</p>}
+              {!col.error && col.items.length === 0 && (
+                <p className={styles.message}>No documents in &quot;{col.config.filterValue}&quot;.</p>
+              )}
+              <ul className={styles.list}>
+                {col.items.map((item) => (
+                  <li key={item.id} className={styles.item}>
+                    <a className={styles.card} href={item.docUrl}>
+                      <span className={styles.iconWrap}>
+                        {item.iconUrl ? (
+                          <img className={styles.icon} src={item.iconUrl} alt="" />
+                        ) : (
+                          <DocumentGlyph />
+                        )}
+                      </span>
+                      <span className={styles.body}>
+                        <span className={styles.title}>{item.title}</span>
+                        {item.description && <span className={styles.description}>{item.description}</span>}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
