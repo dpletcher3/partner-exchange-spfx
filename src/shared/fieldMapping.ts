@@ -26,7 +26,7 @@ import {
 const LOG = '[shared]';
 
 // Column-type restriction for a slot (e.g. only Date columns, only Person columns).
-export type ColumnTypeFilter = 'any' | 'date' | 'person' | 'text' | 'url';
+export type ColumnTypeFilter = 'any' | 'date' | 'person' | 'text' | 'url' | 'choice';
 
 export interface IFieldSlot {
   // The web-part property that stores the chosen internal name.
@@ -100,9 +100,64 @@ function matchesType(col: IColumnInfo, filter?: ColumnTypeFilter): boolean {
       return col.typeAsString === 'Text' || col.typeAsString === 'Note';
     case 'url':
       return col.typeAsString === 'URL';
+    case 'choice':
+      return col.typeAsString === 'Choice' || col.typeAsString === 'MultiChoice';
     default:
       return true;
   }
+}
+
+// Resolves a list's GUID from its title on a (possibly cross-site) web. Throws on
+// failure so the caller can fall back / fail-closed. Used when a web part targets
+// a list by title on another site (no list picker available cross-site).
+export async function resolveListIdByTitle(
+  spHttpClient: SPHttpClient,
+  siteUrl: string,
+  listTitle: string
+): Promise<string> {
+  const base = siteUrl.replace(/\/+$/, '');
+  const url = `${base}/_api/web/lists/getByTitle('${listTitle.replace(/'/g, "''")}')?$select=Id`;
+  console.log(`${LOG} resolveListIdByTitle URL: ${url}`);
+  const response: SPHttpClientResponse = await spHttpClient.get(url, SPHttpClient.configurations.v1);
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(
+      `list resolve failed (${response.status} ${response.statusText}) — ${body.slice(0, 200)}`
+    );
+  }
+  const json = (await response.json()) as { Id?: string };
+  return json && typeof json.Id === 'string' ? json.Id : '';
+}
+
+interface IChoiceFieldResponse {
+  Choices?: string[] | { results?: string[] };
+}
+
+// Fetches the choice values of a single Choice/MultiChoice column, so a web part
+// can drive a LIVE option list (new choices appear automatically) instead of a
+// hardcoded array. Returns [] for a non-choice column.
+export async function fetchChoiceFieldValues(
+  spHttpClient: SPHttpClient,
+  siteUrl: string,
+  listId: string,
+  internalName: string
+): Promise<string[]> {
+  const base = siteUrl.replace(/\/+$/, '');
+  const url =
+    `${base}/_api/web/lists(guid'${listId}')/fields/getByInternalNameOrTitle('${internalName.replace(/'/g, "''")}')` +
+    `?$select=Choices`;
+  console.log(`${LOG} fetchChoiceFieldValues URL: ${url}`);
+  const response: SPHttpClientResponse = await spHttpClient.get(url, SPHttpClient.configurations.v1);
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(
+      `choices fetch failed (${response.status} ${response.statusText}) — ${body.slice(0, 200)}`
+    );
+  }
+  const json = (await response.json()) as IChoiceFieldResponse;
+  const raw = json ? json.Choices : undefined;
+  const list = Array.isArray(raw) ? raw : raw && Array.isArray(raw.results) ? raw.results : [];
+  return list.filter((c): c is string => typeof c === 'string');
 }
 
 export interface IFieldMappingControllerOptions {

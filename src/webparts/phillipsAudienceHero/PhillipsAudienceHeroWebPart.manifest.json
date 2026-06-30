@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+
+  "id": "3f36159a-3bc0-4377-9e39-5f3fc3bb3b5c",
+  "alias": "PhillipsAudienceHeroWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+    {
+      "groupId": "371f9139-6035-45c4-8eac-8102b4068a3a",
+      "group": { "default": "Phillips Custom Components" },
+      "title": { "default": "Audience Hero" },
+      "description": {
+        "default": "Large-image hero tiles, each shown only to viewers whose Partner Profiles division is in that tile's allowed set. Identity from page context (no Microsoft Graph); division via a cross-site SharePoint lookup. Fail-closed: viewers with no matching profile see no tiles."
+      },
+      "officeFabricIconFontName": "People",
+      "properties": {
+        "partnerProfilesSiteUrl": "https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-OurPartners",
+        "partnerProfilesListTitle": "Partner Profiles",
+        "personField": "LinkedUser",
+        "divisionField": "Division",
+        "tiles": []
+      }
+    }
+  ]
+}

@@ -81,6 +81,14 @@
           "manifest": "./src/webparts/phillipsDocumentCards/PhillipsDocumentCardsWebPart.manifest.json"
         }
       ]
+    },
+    "phillips-audience-hero-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/phillipsAudienceHero/PhillipsAudienceHeroWebPart.js",
+          "manifest": "./src/webparts/phillipsAudienceHero/PhillipsAudienceHeroWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -95,6 +103,7 @@
     "PhillipsHighlightVideoWebPartStrings": "lib/webparts/phillipsHighlightVideo/loc/{locale}.js",
     "PhillipsCelebrationsWebPartStrings": "lib/webparts/phillipsCelebrations/loc/{locale}.js",
     "PhillipsDocumentCardsWebPartStrings": "lib/webparts/phillipsDocumentCards/loc/{locale}.js",
+    "PhillipsAudienceHeroWebPartStrings": "lib/webparts/phillipsAudienceHero/loc/{locale}.js",
     "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }
