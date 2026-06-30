@@ -54,15 +54,17 @@
 }
 
 // Date/time line at the bottom of the banner. Same face and shadow as the
-// greeting; size fixed at 16px (independent of greetingSize). Color inherits
-// greetingColor, applied inline.
+// greeting; size is responsive via clamp(14px, 1.7vw, 24px) — ~14px floor on
+// narrow widths, ~18px around typical desktop width, 24px ceiling on wide
+// monitors (independent of greetingSize). Color inherits greetingColor, applied
+// inline.
 .dateTime {
   margin: 0;
   // Pin to the bottom of the flex column now that .hero no longer uses
   // justify-content: space-between (the greeting left the flow).
   margin-top: auto;
   font-family: $phil-font-display;
-  font-size: 16px;
+  font-size: clamp(14px, 1.7vw, 24px);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
