@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { ApplicationCustomizerContext } from '@microsoft/sp-application-base';
+import type { ISPEventObserver } from '@microsoft/sp-core-library';
 import styles from './BrandedHeader.module.scss';
 
 // Base64-encoded Phillips wordmark. Sourced from src/assets/Logo.png and
@@ -113,7 +114,38 @@ export const BrandedHeader: React.FC<IBrandedHeaderProps> = (props) => {
       });
   }, [props.context]);
 
-  const currentUrl = window.location.href;
+  // Current URL as reactive state so the active-nav underline follows SharePoint
+  // client-side (SPA) navigation. The links are plain <a href>; SP intercepts
+  // them and navigates without remounting this placeholder React tree, so a
+  // render-time snapshot of window.location.href goes stale and the underline
+  // would not move on a single click. We recompute it on every navigation.
+  const [currentUrl, setCurrentUrl] = React.useState<string>(window.location.href);
+
+  // Subscribe to navigation and refresh currentUrl. Kept separate from the
+  // nav-fetch effect above. onNavigated reads window.location.href fresh on each
+  // call (no stale closure). SPFx's SPEvent.add/remove require an ISPEventObserver
+  // owner; a functional component has no BaseComponent `this`, so we build a
+  // minimal stable observer from props.context. add() and remove() run in the
+  // same effect closure, so the exact same observer/handler instances are used
+  // for both (as the SDK requires).
+  React.useEffect(() => {
+    const onNavigated = (): void => setCurrentUrl(window.location.href);
+    const observer: ISPEventObserver = {
+      instanceId: props.context.instanceId,
+      // componentId is the component GUID from the manifest. (The optional
+      // `manifest` member of ISPEventObserver is @internal / stripped from the
+      // public typings, so it is intentionally not set here.)
+      componentId: props.context.manifest.id,
+      isDisposed: false,
+      dispose: () => { /* no-op: handler removal is handled in the cleanup below */ }
+    };
+    props.context.application.navigatedEvent.add(observer, onNavigated);
+    window.addEventListener('popstate', onNavigated);
+    return () => {
+      props.context.application.navigatedEvent.remove(observer, onNavigated);
+      window.removeEventListener('popstate', onNavigated);
+    };
+  }, [props.context]);
 
   // No FluentProvider wrapper: this component renders only plain HTML elements
   // styled by CSS modules — no Fluent v9 components used. Mounting a v9
