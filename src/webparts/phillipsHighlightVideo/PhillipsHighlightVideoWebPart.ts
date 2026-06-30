@@ -97,7 +97,9 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
 
   protected onPropertyPaneConfigurationStart(): void {
     // Initial-open path: a list may already be persisted, so load both its
-    // columns and items now (no list re-pick required).
+    // columns and items now (no list re-pick required). This is a best-effort
+    // first attempt; getPropertyPaneConfiguration self-heals if it races
+    // property hydration (listId not yet set when this fires).
     this._loadColumnsForCurrentList();
     this._loadItemsForCurrentList();
   }
@@ -227,6 +229,24 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     const listId = this.properties.listId || '';
+
+    // Self-heal: getPropertyPaneConfiguration is the one pane method guaranteed to
+    // run on every pane render, so kick the loaders here if a persisted list isn't
+    // loaded yet. Covers the race where onPropertyPaneConfigurationStart fired
+    // before this.properties.listId was hydrated (its !listId early-return would
+    // otherwise leave the pane stuck 'loading' with nothing to re-trigger it). The
+    // loaders self-guard (_loadedFor === listId || _loading), so this fires the
+    // fetch at most once per listId; each loader calls propertyPane.refresh() on
+    // completion to re-render the pane with populated dropdowns.
+    if (listId) {
+      if (this._columnsLoadedFor !== listId && !this._columnsLoading) {
+        this._loadColumnsForCurrentList();
+      }
+      if (this._itemsLoadedFor !== listId && !this._itemsLoading) {
+        this._loadItemsForCurrentList();
+      }
+    }
+
     const columnsReady = !!listId && this._columnsLoadedFor === listId;
     const itemsReady = !!listId && this._itemsLoadedFor === listId;
     const mappingBranch = !listId ? 'no-list (hint)' : columnsReady ? 'populated' : 'loading';
