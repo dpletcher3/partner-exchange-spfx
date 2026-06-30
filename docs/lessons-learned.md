@@ -4,6 +4,27 @@ Hard-won insights from building Partner Exchange SPFx. Add entries here when som
 
 ---
 
+## SPFx property-pane data loaders must self-heal from getPropertyPaneConfiguration
+
+*Discovered 2026-06-30 (PhillipsHighlightVideo property pane). Fixed in solution 1.0.17.6, PhillipsHighlightVideoWebPart.ts.*
+
+**Symptom:** HighlightVideo's property-pane dropdowns — the Featured-item picker and the Title/Video/Info field-mapping dropdowns — intermittently rendered empty and disabled, so the author couldn't select a featured item. Intermittent, not every time.
+
+**Root cause:** the pane loaders (`_loadColumnsForCurrentList` / `_loadItemsForCurrentList`) were triggered ONLY by `onPropertyPaneConfigurationStart` (plus a `listId` change in `onPropertyPaneFieldChanged`). `onPropertyPaneConfigurationStart` races property hydration: if `this.properties.listId` was still falsy when it fired, each loader hit its silent `!listId` early-return and **nothing re-triggered the load** — `getPropertyPaneConfiguration` only *read* `_columnsLoadedFor` / `_itemsLoadedFor`, it never *called* the loaders. The pane then stuck permanently in its 'loading' branch (empty + disabled dropdowns). Intermittent because it depended entirely on whether property hydration beat `onPropertyPaneConfigurationStart` on that render.
+
+**Fix:** self-heal from `getPropertyPaneConfiguration` — the one pane method guaranteed to run on every pane render. It now kicks each loader when the source id is set but `_…LoadedFor !== id` and that loader isn't already in flight. The loaders' own `(_loadedFor === id || _loading)` guard plus their completion `propertyPane.refresh()` keep this to exactly one fetch per id and re-render the pane once data lands. `onPropertyPaneConfigurationStart` stays as a best-effort first attempt; the self-heal is the safety net.
+
+**Cross-web-part caveat — a `getPropertyPaneConfiguration` self-heal is ONLY safe when the loader is idempotent per-source.** It must have BOTH (a) a `_loadedFor === source` "already loaded" guard AND (b) an in-flight guard. Without the "already loaded" guard it re-fetches on every pane render; and because most loaders call `propertyPane.refresh()` on completion, that becomes a refresh → getPropertyPaneConfiguration → load → refresh **loop**.
+
+PhillipsAudienceHero was deliberately **NOT** given this fix:
+
+- **It doesn't have the bug.** Its resolver inputs are default-backed (`_ppSiteUrl` → `DEFAULT_PP_SITE`, `_ppListTitle` → `'Partner Profiles'`), so there is no falsy-source early-return that can race hydration — `onPropertyPaneConfigurationStart`'s resolve always proceeds, and was confirmed firing live (`path=live`).
+- **Applying it would be harmful.** `_resolvePartnerProfiles` has only an in-flight `_resolving` guard (no `_resolvedFor === source`) and itself calls `propertyPane.refresh()`, so kicking it from `getPropertyPaneConfiguration` would loop.
+
+**General principle:** before adding a `getPropertyPaneConfiguration` self-heal, confirm the loader is idempotent per-source (has a loaded-for guard). If it isn't, add that guard first — or don't self-heal from there.
+
+---
+
 ## SPFx file/image property pane controls — use PropertyFieldFilePicker
 
 *Discovered 2026-05-27 (Phillips Personalized Hero, I08).*
