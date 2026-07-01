@@ -9,6 +9,7 @@ define([], function() {
     "LayoutFieldLabel": "Layout",
     "LayoutGalleryOptionLabel": "Gallery cards",
     "LayoutTableOptionLabel": "Table rows",
+    "CardFieldCountFieldLabel": "Card detail lines (gallery layout only)",
     "ShowTabsFieldLabel": "Show tabs",
     "ViewFieldLabel": "View",
     "TabCountFieldLabel": "Number of tabs",

@@ -18,6 +18,7 @@ export interface IListViewContentProps {
   listId: string;
   viewId: string;
   layout: Layout;
+  cardFieldCount: number;
   showOverlay: boolean;
   overlaySourceField: string;
   overlayLabelTemplate: string;
@@ -94,6 +95,7 @@ export const ListViewContent: React.FC<IListViewContentProps> = (props) => {
     ) : (
       <GalleryLayout
         data={data}
+        cardFieldCount={props.cardFieldCount}
         showOverlay={props.showOverlay}
         overlaySourceField={props.overlaySourceField}
         overlayLabelTemplate={props.overlayLabelTemplate}

@@ -11,6 +11,7 @@ export interface IPhillipsListViewProps {
   sectionTitle: string;
   listId: string;
   layout: Layout;
+  cardFieldCount: number;
   // Tab strip visibility. When false, the strip is hidden entirely and the
   // renderer is driven by the single configured viewId; when true, the strip
   // exposes tabCount tabs and the active tab's viewId drives the renderer.
@@ -107,6 +108,7 @@ export const PhillipsListView: React.FC<IPhillipsListViewProps> = (props) => {
           listId={props.listId}
           viewId={activeViewId}
           layout={props.layout}
+          cardFieldCount={props.cardFieldCount}
           showOverlay={props.showOverlay}
           overlaySourceField={props.overlaySourceField}
           overlayLabelTemplate={props.overlayLabelTemplate}

@@ -18,6 +18,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  // Uniform baseline height so all-short rows aren't tiny; cards in a row still
+  // stretch to the tallest via the grid's align-items: stretch. Tunable.
+  min-height: 300px;
   background-color: $phil-white;
   border: 1px solid $phil-gray-200;
   border-radius: $phil-radius-xl;
@@ -32,7 +35,7 @@
 .thumb {
   position: relative; // anchor for absolutely-positioned overlay badges
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
 }
 
@@ -66,10 +69,33 @@
   margin-bottom: $phil-space-2;
 }
 
-.secondary {
+// A stacked detail pair: small muted uppercase label above a darkened value.
+.detail {
+  // Gap between field pairs (cardFieldCount > 1). Harmless on the last pair.
+  margin-bottom: $phil-space-2;
+}
+
+.detailLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $phil-gray-400; // muted label (#8a8886)
+  line-height: 1.3;
+  margin-bottom: 1px;
+}
+
+.detailValue {
   font-size: 13px;
-  line-height: 1.5;
-  color: $phil-gray-600;
+  line-height: 1.4;
+  color: $phil-black; // darkened value (#1a1a1a, matches .cardTitle)
+  // Wrap + clamp the VALUE so a short RoleTitle and a long multi-line Note (Bio)
+  // both bound to 2 lines max.
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 // Overlay badge: Phillips-red pill anchored to one of four corners of the

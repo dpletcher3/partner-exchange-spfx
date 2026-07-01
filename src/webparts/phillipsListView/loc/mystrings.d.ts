@@ -8,6 +8,7 @@ declare interface IPhillipsListViewWebPartStrings {
   LayoutFieldLabel: string;
   LayoutGalleryOptionLabel: string;
   LayoutTableOptionLabel: string;
+  CardFieldCountFieldLabel: string;
   ShowTabsFieldLabel: string;
   ViewFieldLabel: string;
   TabCountFieldLabel: string;

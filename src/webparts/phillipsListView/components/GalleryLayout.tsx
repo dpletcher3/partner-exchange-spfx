@@ -40,8 +40,15 @@ interface IImageFieldDescriptor {
   kind: ImageFieldKind;
 }
 
+// A single secondary detail line: the field's display-name label + its value.
+interface ISecondaryLine {
+  label: string;
+  value: string;
+}
+
 export interface IGalleryLayoutProps {
   data: ITabData;
+  cardFieldCount: number;
   showOverlay: boolean;
   overlaySourceField: string;
   overlayLabelTemplate: string;
@@ -59,6 +66,8 @@ interface ICardProps {
   row: IListRow;
   imageField: IImageFieldDescriptor | undefined;
   viewFields: string[];
+  fieldDisplayNames: { [internalName: string]: string };
+  cardFieldCount: number;
   showOverlay: boolean;
   overlaySourceField: string;
   overlayLabelTemplate: string;
@@ -69,6 +78,8 @@ const Card: React.FC<ICardProps> = ({
   row,
   imageField,
   viewFields,
+  fieldDisplayNames,
+  cardFieldCount,
   showOverlay,
   overlaySourceField,
   overlayLabelTemplate,
@@ -78,7 +89,7 @@ const Card: React.FC<ICardProps> = ({
   const imageUrl = imageField
     ? resolveImageUrl(imageField, row)
     : undefined;
-  const secondary = getSecondaryLine(row, viewFields, imageField?.name);
+  const secondaryLines = getSecondaryLines(row, viewFields, fieldDisplayNames, imageField?.name, cardFieldCount);
 
   // Overlay only renders when configured AND the source field has a non-empty
   // value for THIS item. Empty values skip the badge silently.
@@ -105,7 +116,12 @@ const Card: React.FC<ICardProps> = ({
       </div>
       <div className={styles.body}>
         {title && <div className={styles.cardTitle}>{title}</div>}
-        {secondary && <div className={styles.secondary}>{secondary}</div>}
+        {secondaryLines.map((line, i) => (
+          <div key={i} className={styles.detail}>
+            <div className={styles.detailLabel}>{line.label}</div>
+            <div className={styles.detailValue}>{line.value}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -113,6 +129,7 @@ const Card: React.FC<ICardProps> = ({
 
 export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
   data,
+  cardFieldCount,
   showOverlay,
   overlaySourceField,
   overlayLabelTemplate,
@@ -138,6 +155,8 @@ export const GalleryLayout: React.FC<IGalleryLayoutProps> = ({
           row={row}
           imageField={imageField}
           viewFields={data.viewFields}
+          fieldDisplayNames={data.fieldDisplayNames}
+          cardFieldCount={cardFieldCount}
           showOverlay={showOverlay}
           overlaySourceField={overlaySourceField}
           overlayLabelTemplate={overlayLabelTemplate}
@@ -376,23 +395,35 @@ function findAttachmentUrl(attachmentFiles: unknown, fileName: string): string |
   return undefined;
 }
 
-// Picks the first non-title, non-image field in the view's order and returns
-// its value as a display string. Returns '' when no usable value exists.
-function getSecondaryLine(
+// Picks up to `count` non-empty fields in the view's field order, using the
+// IDENTICAL skip set as the original single-line behavior (Title, the image
+// field, ID, LinkTitle). Returns { label, value } pairs — label is the field's
+// display name, falling back to its internal name so a line is never
+// blank-labeled. May be shorter than `count`, or empty. With count=1 this yields
+// the same single field the prior getSecondaryLine picked, now as one labeled
+// pair — so default (cardFieldCount=1) instances render one labeled line.
+function getSecondaryLines(
   row: IListRow,
   viewFields: string[],
-  imageFieldName: string | undefined
-): string {
+  fieldDisplayNames: { [internalName: string]: string },
+  imageFieldName: string | undefined,
+  count: number
+): ISecondaryLine[] {
+  const max = count > 0 ? count : 1;
+  const lines: ISecondaryLine[] = [];
   for (const field of viewFields) {
     if (field === 'Title' || field === imageFieldName || field === 'ID' || field === 'LinkTitle') {
       continue;
     }
     const value = coerceToString(row[field]);
     if (value) {
-      return value;
+      lines.push({ label: fieldDisplayNames[field] || field, value });
+      if (lines.length >= max) {
+        break;
+      }
     }
   }
-  return '';
+  return lines;
 }
 
 // Coerces any field value to a display string.

@@ -35,6 +35,9 @@ export interface IPhillipsListViewWebPartProps {
   sectionTitle: string;
   listId: string;
   layout: Layout;
+  // Number of view-order fields rendered as stacked detail lines on each gallery
+  // card (1–4; default 1 reproduces the original single auto-picked secondary).
+  cardFieldCount: number;
   // Tab strip on/off. Default true (matches the original tabbed behavior, so
   // existing instances configured under "Tabbed List Views" keep working).
   showTabs: boolean;
@@ -71,6 +74,7 @@ export default class PhillipsListViewWebPart extends BaseClientSideWebPart<IPhil
       sectionTitle: this.properties.sectionTitle || '',
       listId: this.properties.listId || '',
       layout: this.properties.layout || 'gallery',
+      cardFieldCount: this.properties.cardFieldCount || 1,
       // Default to true so existing 1.0.1.x instances (which don't have this
       // property serialized) keep their tab strip — undefined would be falsy.
       showTabs: this.properties.showTabs !== false,
@@ -235,6 +239,11 @@ export default class PhillipsListViewWebPart extends BaseClientSideWebPart<IPhil
       text: String(n)
     }));
 
+    const cardFieldCountOptions: IPropertyPaneDropdownOption[] = [1, 2, 3, 4].map((n) => ({
+      key: n,
+      text: String(n)
+    }));
+
     const layoutOptions: IPropertyPaneDropdownOption[] = [
       { key: 'gallery', text: strings.LayoutGalleryOptionLabel },
       { key: 'table', text: strings.LayoutTableOptionLabel }
@@ -343,6 +352,18 @@ export default class PhillipsListViewWebPart extends BaseClientSideWebPart<IPhil
         label: strings.SeeAllUrlFieldLabel
       })
     );
+
+    // Gallery-only: how many view-order fields to stack as card detail lines.
+    // Static 1–4 options (no data load, no async surface) — mirrors tabCount.
+    if (this.properties.layout === 'gallery') {
+      contentFields.push(
+        PropertyPaneDropdown('cardFieldCount', {
+          label: strings.CardFieldCountFieldLabel,
+          options: cardFieldCountOptions,
+          selectedKey: this.properties.cardFieldCount || 1
+        })
+      );
+    }
 
     const overlayFields: IPropertyPaneField<unknown>[] = [
       PropertyPaneToggle('showOverlay', {
