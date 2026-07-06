@@ -32,7 +32,15 @@ These must always be true. If a prompt or change would violate them, stop and ra
 - **Mobile responsiveness must not regress.** SharePoint pages render on phones; the customizer cannot break that.
 - **CSS specificity stays as low as possible.** Single-class selectors when feasible. Don't fight SharePoint's own styles with `!important` unless there's no other option; comment why if used.
 - **No external network calls from the Application Customizer.** No CDN-loaded fonts at runtime (fonts are deployed via SharePoint Brand Center or bundled), no analytics beacons, no remote config. Keeps Content Security Policy simple and avoids dependency on services.
-- **The Personalized Hero web part uses `this.context.pageContext.user.displayName` only.** No Microsoft Graph API calls. Keeps it fast, avoids permission grants, eliminates auth complexity.
+- **The Personalized Hero web part reads `this.context.pageContext.user.displayName` only — it does not call Microsoft Graph.** This is a per-web-part performance/simplicity choice (no permission grant or auth needed for a display name), not a project-wide prohibition. For Graph usage, see "Microsoft Graph" below.
+
+## Microsoft Graph
+
+Microsoft Graph is sanctioned for this project as of D050 (partner-exchange-provisioning/docs/decisions.md). The earlier "no Graph" stance was a temporary demo-scoping choice, now retired.
+
+Current use — the AD-sourced Partner Profiles sync — is application/app-only and does NOT live here. It runs unattended in a separate scheduled host under its own app identity (app registration or managed identity), never in an SPFx web part or the Application Customizer. Least-privilege: `User.Read.All` (+ `GroupMember.Read.All` if group-scoped) to read; `Sites.Selected` (Write, granted on the Our Partners site only) to write. Do not attempt unattended or all-users Graph reads from client-side SPFx code, and do not put app-only scopes in `webApiPermissionRequests`.
+
+Delegated, in-SPFx Graph (`MSGraphClientV3` via `this.context.msGraphClientFactory`, scopes declared in `config/package-solution.json` → `webApiPermissionRequests`, admin-approved on the SharePoint API access page) is also sanctioned but not currently in use — the Graph/Entra audience-targeting enhancement (D048 successor) remains deferred; the division-based PhillipsAudienceHero stays the live solution.
 
 ## Brand tokens (single source of truth)
 
