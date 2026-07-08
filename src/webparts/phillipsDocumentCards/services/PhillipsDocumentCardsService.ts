@@ -1,7 +1,7 @@
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 
 import { IFieldMapping, IDocCardItem } from './models';
-import { extractImageColumnUrl, asString } from './extractors';
+import { extractImageColumnUrl, asString, resolveDocUrl } from './extractors';
 
 const LOG = '[DocumentCards]';
 const MAX_ITEMS = 500;
@@ -32,9 +32,14 @@ export class PhillipsDocumentCardsService {
     const base = siteUrl.replace(/\/+$/, '');
     const titleField = mapping.titleField || 'FileLeafRef';
 
-    // FileLeafRef (name) + FileRef (server-relative URL, the click target) are
-    // built-in. De-dup so a title remapped onto a built-in doesn't double up.
-    const selectFields = ['Id', 'FileLeafRef', 'FileRef', titleField, mapping.descriptionField, mapping.iconField, mapping.sectionField]
+    // FileLeafRef (name) + FileRef (raw server-relative path) are built-in.
+    // ServerRedirectedEmbedUrl (D061) is the item-level browser-open URL used as
+    // the click target, with FileRef as the fallback for non-previewable types —
+    // it is a property of the list ITEM (SP.ListItem), so it is selected directly
+    // with NO $expand (the earlier File/ServerRedirectedEmbedUrl candidate returns
+    // empty because it is not a property of SP.File). De-dup so a title remapped
+    // onto a built-in doesn't double up.
+    const selectFields = ['Id', 'FileLeafRef', 'FileRef', 'ServerRedirectedEmbedUrl', titleField, mapping.descriptionField, mapping.iconField, mapping.sectionField]
       .filter((f, i, arr) => !!f && arr.indexOf(f) === i);
 
     // OData eq on a single-value Choice; double any single quotes in the value.
@@ -85,7 +90,8 @@ export class PhillipsDocumentCardsService {
     // Inline-URL Image column: the blob carries serverRelativeUrl, so no
     // attachment-files lookup is needed (pass undefined for that argument).
     const iconUrl = extractImageColumnUrl(row[mapping.iconField], undefined);
-    const docUrl = asString(row.FileRef);
+    // Browser-open URL (ServerRedirectedEmbedUrl) with a FileRef fallback — D061.
+    const docUrl = resolveDocUrl(row.ServerRedirectedEmbedUrl, row.FileRef);
     const section = asString(row[mapping.sectionField]);
 
     return { id, title, description, iconUrl, docUrl, section };

@@ -39,6 +39,16 @@ export function extractUrl(raw: unknown): string {
   return '';
 }
 
+// The click target for a document card (D061). Prefers the item-level
+// ServerRedirectedEmbedUrl — SharePoint's canonical browser-open URL, routed
+// through the Office/PDF web viewer so the file OPENS rather than downloads.
+// That value is populated for previewable types and EMPTY for others (.zip,
+// .txt, …), so we fall back to the raw FileRef server-relative path, which
+// still resolves to a working link (those types legitimately download).
+export function resolveDocUrl(serverRedirectedEmbedUrl: unknown, fileRef: unknown): string {
+  return asString(serverRedirectedEmbedUrl) || asString(fileRef);
+}
+
 // Image / Thumbnail column. The value is a stringified JSON blob. Two shapes
 // occur in the wild:
 //   1. Modern Image column with an inline URL: { serverRelativeUrl | serverUrl, … }

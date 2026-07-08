@@ -33,7 +33,9 @@ export interface IDocCardItem {
   // none — the card shows a placeholder. (`undefined`, not `null`, per the rig's
   // @rushstack/no-new-null.)
   iconUrl?: string;
-  // Server-relative URL of the file (FileRef), opened on click.
+  // Click target — the item's browser-open ServerRedirectedEmbedUrl (opens in the
+  // Office/PDF web viewer), falling back to the raw FileRef server-relative path
+  // when the embed URL is empty (non-previewable types). See D061 / resolveDocUrl.
   docUrl: string;
   // The DocSection value this item carries (the column it belongs to).
   section: string;

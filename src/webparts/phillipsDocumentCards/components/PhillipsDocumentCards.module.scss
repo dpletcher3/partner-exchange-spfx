@@ -86,6 +86,9 @@
   border-radius: $phil-radius-lg;
   text-decoration: none;
   color: inherit;
+  // The card is a hrefless role="link" <div> (JS-driven navigation), so it does
+  // not inherit an anchor's default pointer cursor — set it explicitly.
+  cursor: pointer;
   transition: border-color 0.15s ease-out;
 }
 
