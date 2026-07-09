@@ -49,6 +49,29 @@ export function resolveDocUrl(serverRedirectedEmbedUrl: unknown, fileRef: unknow
   return asString(serverRedirectedEmbedUrl) || asString(fileRef);
 }
 
+export interface ICardTarget {
+  // Resolved href for the card link.
+  href: string;
+  // true → href is an external CardLink and the card should open in a new tab;
+  // false → href is a document link and opens same-tab (the I25 behavior).
+  external: boolean;
+}
+
+// The card's link target (D062). A set CardLink (external Hyperlink column) wins —
+// the card links out and opens in a new tab. Otherwise the card is an I25 document
+// link: same-tab viewer via ServerRedirectedEmbedUrl, with a FileRef fallback.
+export function resolveCardTarget(
+  cardLink: unknown,
+  serverRedirectedEmbedUrl: unknown,
+  fileRef: unknown
+): ICardTarget {
+  const external = extractUrl(cardLink);
+  if (external) {
+    return { href: external, external: true };
+  }
+  return { href: resolveDocUrl(serverRedirectedEmbedUrl, fileRef), external: false };
+}
+
 // Image / Thumbnail column. The value is a stringified JSON blob. Two shapes
 // occur in the wild:
 //   1. Modern Image column with an inline URL: { serverRelativeUrl | serverUrl, … }

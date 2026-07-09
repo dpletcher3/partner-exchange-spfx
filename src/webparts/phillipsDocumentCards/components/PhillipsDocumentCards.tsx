@@ -129,7 +129,11 @@ export const PhillipsDocumentCards: React.FC<IPhillipsDocumentCardsProps> = (pro
               <ul className={styles.list}>
                 {col.items.map((item) => (
                   <li key={item.id} className={styles.item}>
-                    <a className={styles.card} href={item.docUrl}>
+                    <a
+                      className={styles.card}
+                      href={item.docUrl}
+                      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    >
                       <span className={styles.iconWrap}>
                         {item.iconUrl ? (
                           <img className={styles.icon} src={item.iconUrl} alt="" />

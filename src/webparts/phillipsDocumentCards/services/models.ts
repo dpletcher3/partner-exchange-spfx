@@ -33,10 +33,12 @@ export interface IDocCardItem {
   // none — the card shows a placeholder. (`undefined`, not `null`, per the rig's
   // @rushstack/no-new-null.)
   iconUrl?: string;
-  // Click target — the item's browser-open ServerRedirectedEmbedUrl (opens in the
-  // Office/PDF web viewer), falling back to the raw FileRef server-relative path
-  // when the embed URL is empty (non-previewable types). See D061 / resolveDocUrl.
+  // Resolved click target. When `external` is true this is the CardLink external
+  // URL (opens in a new tab, D062); otherwise the document link — browser-open
+  // ServerRedirectedEmbedUrl, FileRef fallback, opened same-tab (D061 / resolveCardTarget).
   docUrl: string;
+  // D062: true → docUrl is an external CardLink (new tab); false → same-tab document link.
+  external: boolean;
   // The DocSection value this item carries (the column it belongs to).
   section: string;
 }

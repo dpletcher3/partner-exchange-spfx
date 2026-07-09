@@ -1,4 +1,4 @@
-import { resolveDocUrl } from '../extractors';
+import { resolveDocUrl, resolveCardTarget } from '../extractors';
 
 // D061: the card click target prefers the item-level ServerRedirectedEmbedUrl
 // (SharePoint's browser-open URL, routed through the Office/PDF web viewer) and
@@ -24,5 +24,39 @@ describe('resolveDocUrl', () => {
   it('returns "" when both values are empty', () => {
     expect(resolveDocUrl('', '')).toBe('');
     expect(resolveDocUrl(undefined, undefined)).toBe('');
+  });
+});
+
+// D062: an external CardLink (Hyperlink column) wins — the card links out and opens
+// in a new tab; otherwise the card is an I25 document link (same-tab viewer via
+// ServerRedirectedEmbedUrl, FileRef fallback).
+describe('resolveCardTarget', () => {
+  const EMBED = 'https://contoso.sharepoint.com/sites/it/_layouts/15/Doc.aspx?sourcedoc={abc}&action=interactivepreview';
+  const FILEREF = '/sites/it/Phillips Documents/Guide.docx';
+  const EXTERNAL = 'https://books.phillipscorp.com/handbook';
+
+  it('external when CardLink is a { Url } object (ignores embed/FileRef)', () => {
+    expect(resolveCardTarget({ Url: EXTERNAL, Description: EXTERNAL }, EMBED, FILEREF)).toEqual({
+      href: EXTERNAL,
+      external: true
+    });
+  });
+
+  it('external when CardLink is a bare string', () => {
+    expect(resolveCardTarget(EXTERNAL, EMBED, FILEREF)).toEqual({ href: EXTERNAL, external: true });
+  });
+
+  it('document (same-tab) when CardLink is empty — prefers the embed URL', () => {
+    expect(resolveCardTarget('', EMBED, FILEREF)).toEqual({ href: EMBED, external: false });
+    expect(resolveCardTarget(null, EMBED, FILEREF)).toEqual({ href: EMBED, external: false });
+    expect(resolveCardTarget(undefined, EMBED, FILEREF)).toEqual({ href: EMBED, external: false });
+  });
+
+  it('document falls back to FileRef when CardLink and embed are both empty', () => {
+    expect(resolveCardTarget('', '', FILEREF)).toEqual({ href: FILEREF, external: false });
+  });
+
+  it('href "" and external false when everything is empty', () => {
+    expect(resolveCardTarget(undefined, undefined, undefined)).toEqual({ href: '', external: false });
   });
 });
