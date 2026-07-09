@@ -132,7 +132,9 @@ export const PhillipsDocumentCards: React.FC<IPhillipsDocumentCardsProps> = (pro
                     <a
                       className={styles.card}
                       href={item.docUrl}
-                      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-interception="off"
                     >
                       <span className={styles.iconWrap}>
                         {item.iconUrl ? (
