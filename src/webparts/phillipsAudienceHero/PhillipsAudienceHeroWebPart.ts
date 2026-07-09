@@ -31,7 +31,7 @@ const MAX_TILES = 30;
 
 // Defaults (confirmed by the 2026-06-29 survey). The Partner Profiles site is a
 // pane setting so production can repoint it without a code change.
-const DEFAULT_PP_SITE = 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-OurPartners';
+const DEFAULT_PP_SITE = 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-OurPartners';
 const DEFAULT_LIST_TITLE = 'Partner Profiles';
 const DEFAULT_PERSON_FIELD = 'LinkedUser';
 const DEFAULT_DIVISION_FIELD = 'Division';

@@ -22,7 +22,7 @@
       },
       "officeFabricIconFontName": "People",
       "properties": {
-        "partnerProfilesSiteUrl": "https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-OurPartners",
+        "partnerProfilesSiteUrl": "https://phillipscorp.sharepoint.com/sites/PartnerExchange-OurPartners",
         "partnerProfilesListTitle": "Partner Profiles",
         "personField": "LinkedUser",
         "divisionField": "Division",

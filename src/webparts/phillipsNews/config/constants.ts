@@ -7,7 +7,7 @@
 // web part can be repointed without a code change.
 
 export const HUB_SITE_URL =
-  'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox';
+  'https://phillipscorp.sharepoint.com/sites/PartnerExchange';
 
 export const DEFAULT_LIST_TITLE = 'News Repository';
 

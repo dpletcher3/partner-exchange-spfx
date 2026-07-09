@@ -261,9 +261,11 @@ body,
    Sub-hubs (The Hub, department sites) render their own unique nav in the
    same ms-HubNav container (e.g. the human-authored Support grouping), which
    MUST be preserved. We therefore scope the hide to the family hub by its
-   URL: the hub nameLink href ends with /sites/PartnerExchange-Sandbox.
+   URL: the hub nameLink href ends with /sites/PartnerExchange.
    Keyed on URL (not the shifting hubNavRow-NNN class, not the rename-fragile
-   aria-label). Sandbox-only; prod URL handled at I10. */
-.ms-HubNav:has(a.ms-HubNav-nameLink[href$="/sites/PartnerExchange-Sandbox"]) {
+   aria-label). Production URL as of the I27/D064 rename (dropped -Sandbox).
+   Note the ends-with ($=) match is exact: it will not match spoke URLs like
+   /sites/PartnerExchange-OurCulture, which end with -OurCulture, not the hub root. */
+.ms-HubNav:has(a.ms-HubNav-nameLink[href$="/sites/PartnerExchange"]) {
   display: none !important;
 }

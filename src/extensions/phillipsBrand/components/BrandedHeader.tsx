@@ -23,18 +23,19 @@ interface INavItem {
   SimpleUrl: string;
 }
 
-// Sandbox tenant URLs — acceptable per D023 (sandbox specifics live in code,
-// production deploy updates these). Used both as the fallback when the hub
+// Production tenant URLs (post-I27/D064 rename that dropped the -Sandbox
+// segment; D023 established that these site specifics live in code and the
+// production deploy updates them). Used both as the fallback when the hub
 // nav fetch fails and as the canonical site root for the active-state check.
 const FALLBACK_NAV: INavItem[] = [
-  { Title: 'Home',         SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox' },
-  { Title: 'Our Culture',  SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-OurCulture' },
-  { Title: 'Our Partners', SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-OurPartners' },
-  { Title: 'Dashboard',    SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-Dashboard' },
-  { Title: 'The Hub',      SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox-TheHub' },
+  { Title: 'Home',         SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange' },
+  { Title: 'Our Culture',  SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-OurCulture' },
+  { Title: 'Our Partners', SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-OurPartners' },
+  { Title: 'Dashboard',    SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Dashboard' },
+  { Title: 'The Hub',      SimpleUrl: 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-TheHub' },
 ];
 
-const HUB_ROOT_URL = 'https://phillipscorp.sharepoint.com/sites/PartnerExchange-Sandbox';
+const HUB_ROOT_URL = 'https://phillipscorp.sharepoint.com/sites/PartnerExchange';
 const CACHE_KEY = 'phil-hub-nav-cache';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -59,8 +60,8 @@ function urlPath(url: string): string {
 }
 
 // Active iff the current path equals the link path, or continues past it with
-// a `/`. The `+ '/'` guard is what prevents `/sites/PartnerExchange-Sandbox`
-// from incorrectly matching `/sites/PartnerExchange-Sandbox-OurCulture`.
+// a `/`. The `+ '/'` guard is what prevents `/sites/PartnerExchange`
+// from incorrectly matching `/sites/PartnerExchange-OurCulture`.
 function isNavItemActive(itemUrl: string, currentUrl: string): boolean {
   const link = urlPath(itemUrl);
   const here = urlPath(currentUrl);

@@ -4,7 +4,7 @@
     "name": "partner-exchange-spfx",
     "title": "Partner Exchange Brand & Components",
     "id": "7b2e6ef9-8db7-41cd-9660-3aee7feb8f63",
-    "version": "1.0.17.16",
+    "version": "1.0.17.17",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
