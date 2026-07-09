@@ -5,6 +5,7 @@ declare interface IPhillipsCelebrationsWebPartStrings {
   FieldMappingEmptyLabel: string;
   ListFieldLabel: string;
   CommunityUrlFieldLabel: string;
+  ShowSendAWishFieldLabel: string;
   WeekStartFieldLabel: string;
   WeekStartSundayLabel: string;
   WeekStartMondayLabel: string;

@@ -6,6 +6,7 @@ define([], function() {
     "FieldMappingEmptyLabel": "Select a list above to map its columns.",
     "ListFieldLabel": "People list",
     "CommunityUrlFieldLabel": "Viva Engage community URL",
+    "ShowSendAWishFieldLabel": "Show 'Send a Wish' button",
     "WeekStartFieldLabel": "Week starts on",
     "WeekStartSundayLabel": "Sunday",
     "WeekStartMondayLabel": "Monday",

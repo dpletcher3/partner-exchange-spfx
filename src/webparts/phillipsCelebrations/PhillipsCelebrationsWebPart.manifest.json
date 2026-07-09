@@ -28,7 +28,8 @@
         "hireField": "HireDate",
         "communityUrl": "",
         "weekStart": "sunday",
-        "defaultTab": "birthdays"
+        "defaultTab": "birthdays",
+        "showSendAWish": false
       }
     }
   ]

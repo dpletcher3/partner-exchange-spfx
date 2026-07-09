@@ -12,6 +12,8 @@ export interface IPhillipsCelebrationsProps {
   mapping: ICelebrationsMapping;
   weekStart: WeekStart;
   defaultTab: 'birthdays' | 'anniversaries';
+  // Visibility of the (disabled placeholder) Send-a-Wish button; default hidden.
+  showSendAWish?: boolean;
 }
 
 type Tab = 'anniversaries' | 'birthdays';
@@ -148,10 +150,14 @@ export const PhillipsCelebrations: React.FC<IPhillipsCelebrationsProps> = (props
                           {ev.type === 'anniversary' && ev.years && (
                             <div className={styles.years}>{ev.years} {ev.years === 1 ? 'Year' : 'Years'}</div>
                           )}
-                          {/* Send a Wish — non-functional placeholder; wired in Turn 3. */}
-                          <button type="button" className={styles.wishBtn} disabled>
-                            Send a Wish
-                          </button>
+                          {/* Send a Wish — disabled placeholder, hidden by default via the
+                              showSendAWish toggle; Turn 3 wiring (handler + Viva Engage
+                              deep-link) still pending. Kept intact so the toggle restores it. */}
+                          {props.showSendAWish && (
+                            <button type="button" className={styles.wishBtn} disabled>
+                              Send a Wish
+                            </button>
+                          )}
                         </div>
                       );
                     })}

@@ -5,7 +5,8 @@ import {
   IPropertyPaneConfiguration,
   IPropertyPaneDropdownOption,
   PropertyPaneDropdown,
-  PropertyPaneTextField
+  PropertyPaneTextField,
+  PropertyPaneToggle
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import {
@@ -34,6 +35,9 @@ export interface IPhillipsCelebrationsWebPartProps {
   communityUrl: string;
   weekStart: string; // 'sunday' | 'monday'
   defaultTab: string; // 'birthdays' | 'anniversaries'
+  // Send-a-Wish button visibility (default false / hidden). Undefined on existing
+  // placed instances → treated as false in render(), so they need no reconfiguration.
+  showSendAWish: boolean;
 }
 
 export default class PhillipsCelebrationsWebPart extends BaseClientSideWebPart<IPhillipsCelebrationsWebPartProps> {
@@ -77,7 +81,9 @@ export default class PhillipsCelebrationsWebPart extends BaseClientSideWebPart<I
       listId: this.properties.listId || '',
       mapping,
       weekStart: this.properties.weekStart === 'monday' ? 'monday' : 'sunday',
-      defaultTab: this.properties.defaultTab === 'anniversaries' ? 'anniversaries' : 'birthdays'
+      defaultTab: this.properties.defaultTab === 'anniversaries' ? 'anniversaries' : 'birthdays',
+      // undefined on existing placed instances → false (button hidden); no reconfig needed.
+      showSendAWish: this.properties.showSendAWish === true
     };
     console.log(`${LOG} render: listId=${props.listId || '(none)'}, weekStart=${props.weekStart}, defaultTab=${props.defaultTab}`);
     ReactDom.render(React.createElement(PhillipsCelebrations, props), this.domElement);
@@ -155,6 +161,9 @@ export default class PhillipsCelebrationsWebPart extends BaseClientSideWebPart<I
                 }),
                 PropertyPaneTextField('communityUrl', {
                   label: strings.CommunityUrlFieldLabel
+                }),
+                PropertyPaneToggle('showSendAWish', {
+                  label: strings.ShowSendAWishFieldLabel
                 })
               ]
             },
