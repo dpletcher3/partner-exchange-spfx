@@ -5,7 +5,6 @@ import {
   IPropertyPaneConfiguration,
   IPropertyPaneField,
   IPropertyPaneDropdownOption,
-  PropertyPaneLabel,
   PropertyPaneDropdown,
   PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
@@ -17,7 +16,8 @@ import {
 
 import * as strings from 'PhillipsHighlightVideoWebPartStrings';
 import { PhillipsHighlightVideo, IPhillipsHighlightVideoProps } from './components/PhillipsHighlightVideo';
-import { HighlightVideoService, IColumnInfo, IListItemRef } from './services/HighlightVideoService';
+import { HighlightVideoService, IListItemRef } from './services/HighlightVideoService';
+import { FieldMappingController, IFieldSlot } from '../../shared/fieldMapping';
 import { IFieldMapping } from './services/models';
 
 // @pnp/spfx-property-controls ships its own nested copy of
@@ -41,23 +41,40 @@ export interface IPhillipsHighlightVideoWebPartProps {
   infoField: string;
 }
 
-type MappingProperty = 'titleField' | 'videoField' | 'infoField';
-
 export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart<IPhillipsHighlightVideoWebPartProps> {
   private _service!: HighlightVideoService;
 
-  // Both column metadata (for field mapping) and item refs (for the item
-  // picker) depend on the selected list; both re-fetch on a list change.
-  private _availableColumns: IColumnInfo[] = [];
-  private _columnsLoadedFor: string | undefined = undefined;
-  private _columnsLoading = false;
+  // Column metadata (field mapping) is owned by the shared FieldMappingController.
+  // Item refs (the featured-item picker) are NOT part of that module's scope, so
+  // they keep their local loader — both still re-fetch on a list change.
+  private _mapping!: FieldMappingController;
 
   private _availableItems: IListItemRef[] = [];
   private _itemsLoadedFor: string | undefined = undefined;
   private _itemsLoading = false;
 
+  // No typeFilter: the mapping dropdowns have always offered every column, and
+  // this migration is behavior-neutral. defaultInternalName documents the §2
+  // convention-with-override defaults that render() applies.
+  private get _slots(): IFieldSlot[] {
+    return [
+      { property: 'titleField', label: strings.TitleFieldLabel, defaultInternalName: 'Title' },
+      { property: 'videoField', label: strings.VideoFieldLabel, defaultInternalName: 'Video' },
+      { property: 'infoField', label: strings.InfoFieldLabel, defaultInternalName: 'HighlightInfo' }
+    ];
+  }
+
   protected onInit(): Promise<void> {
     this._service = new HighlightVideoService(this.context.spHttpClient);
+    this._mapping = new FieldMappingController({
+      spHttpClient: this.context.spHttpClient,
+      siteUrl: this.context.pageContext.web.absoluteUrl,
+      slots: this._slots,
+      getListId: () => this.properties.listId || '',
+      properties: this.properties as unknown as Record<string, unknown>,
+      refresh: () => this.context.propertyPane.refresh(),
+      hintLabel: strings.FieldMappingEmptyLabel
+    });
     return super.onInit();
   }
 
@@ -100,50 +117,8 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
     // columns and items now (no list re-pick required). This is a best-effort
     // first attempt; getPropertyPaneConfiguration self-heals if it races
     // property hydration (listId not yet set when this fires).
-    this._loadColumnsForCurrentList();
+    this._mapping.load();
     this._loadItemsForCurrentList();
-  }
-
-  private _loadColumnsForCurrentList(): void {
-    const listId = this.properties.listId;
-    const siteUrl = this.context.pageContext.web.absoluteUrl;
-    if (!listId) {
-      this._availableColumns = [];
-      this._columnsLoadedFor = undefined;
-      return;
-    }
-    if (this._columnsLoadedFor === listId || this._columnsLoading) {
-      return;
-    }
-    this._columnsLoading = true;
-    console.log(`${LOG} loading columns for listId=${listId}`);
-    const target = listId;
-    this._service
-      .getColumns(siteUrl, target)
-      .then((cols) => {
-        if (this.properties.listId !== target) {
-          return;
-        }
-        this._availableColumns = cols;
-        this._columnsLoadedFor = target;
-        console.log(`${LOG} loaded ${cols.length} columns:`, cols.map((c) => c.internalName));
-        this.context.propertyPane.refresh();
-      })
-      .catch((err: unknown) => {
-        console.warn(`${LOG} column fetch FAILED for listId=${target}`, err);
-        if (this.properties.listId !== target) {
-          return;
-        }
-        this._availableColumns = [];
-        this._columnsLoadedFor = target;
-        this.context.propertyPane.refresh();
-      })
-      .then(() => {
-        this._columnsLoading = false;
-      })
-      .catch(() => {
-        /* non-floating */
-      });
   }
 
   private _loadItemsForCurrentList(): void {
@@ -199,23 +174,14 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
       console.log(`${LOG} listId changed: ${String(oldValue) || '(none)'} → ${String(newValue) || '(none)'}`);
       // The previously-featured item belongs to the old list — always clear it.
       this.properties.itemId = 0;
-      // Convention-with-override: only clear mappings when switching BETWEEN two
-      // real lists; the first selection keeps the defaults (Title/Video/HighlightInfo).
-      if (oldValue) {
-        console.log(`${LOG} switching lists — clearing item + stale column mappings`);
-        this.properties.titleField = '';
-        this.properties.videoField = '';
-        this.properties.infoField = '';
-      } else {
-        console.log(`${LOG} first list selection — preserving default mappings`);
-      }
-      // Re-fetch BOTH the item list and the columns, then refresh so both the
-      // item dropdown and the mapping dropdowns repopulate (the stale-dropdown risk).
-      this._availableColumns = [];
-      this._columnsLoadedFor = undefined;
+      // Shared module owns the mapping half: it clears slots only when switching
+      // between two real lists (a first selection keeps the Title/Video/
+      // HighlightInfo defaults), re-fetches the new list's columns, and refreshes.
+      this._mapping.onListChanged(oldValue);
+      // The item half stays local — re-fetch so the item dropdown repopulates
+      // rather than showing the old list's items (the stale-dropdown risk).
       this._availableItems = [];
       this._itemsLoadedFor = undefined;
-      this._loadColumnsForCurrentList();
       this._loadItemsForCurrentList();
       this.context.propertyPane.refresh();
     }
@@ -234,35 +200,25 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
     // run on every pane render, so kick the loaders here if a persisted list isn't
     // loaded yet. Covers the race where onPropertyPaneConfigurationStart fired
     // before this.properties.listId was hydrated (its !listId early-return would
-    // otherwise leave the pane stuck 'loading' with nothing to re-trigger it). The
-    // loaders self-guard (_loadedFor === listId || _loading), so this fires the
-    // fetch at most once per listId; each loader calls propertyPane.refresh() on
-    // completion to re-render the pane with populated dropdowns.
+    // otherwise leave the pane stuck 'loading' with nothing to re-trigger it). Both
+    // loaders self-guard (_loadedFor === listId || _loading — the controller does
+    // this internally too), so this fires each fetch at most once per listId; each
+    // calls propertyPane.refresh() on completion to re-render with populated
+    // dropdowns. Retained deliberately: the shared controller is only load()ed from
+    // onPropertyPaneConfigurationStart in Celebrations, which has no item picker
+    // and so never exercised this race.
     if (listId) {
-      if (this._columnsLoadedFor !== listId && !this._columnsLoading) {
-        this._loadColumnsForCurrentList();
-      }
+      this._mapping.load();
       if (this._itemsLoadedFor !== listId && !this._itemsLoading) {
         this._loadItemsForCurrentList();
       }
     }
 
-    const columnsReady = !!listId && this._columnsLoadedFor === listId;
     const itemsReady = !!listId && this._itemsLoadedFor === listId;
-    const mappingBranch = !listId ? 'no-list (hint)' : columnsReady ? 'populated' : 'loading';
     console.log(
       `${LOG} pane config: listId=${listId || '(none)'}, itemsReady=${itemsReady} (${this._availableItems.length}), ` +
-        `columnsReady=${columnsReady} (${this._availableColumns.length}), field-mapping branch=${mappingBranch}, ` +
-        `itemId=${this.properties.itemId || 0}`
+        `columnsReady=${this._mapping.columnsReady}, itemId=${this.properties.itemId || 0}`
     );
-
-    const mappingFields: IPropertyPaneField<unknown>[] = listId
-      ? [
-          this._mappingDropdown('titleField', strings.TitleFieldLabel, columnsReady),
-          this._mappingDropdown('videoField', strings.VideoFieldLabel, columnsReady),
-          this._mappingDropdown('infoField', strings.InfoFieldLabel, columnsReady)
-        ]
-      : [PropertyPaneLabel('fieldMappingHint', { text: strings.FieldMappingEmptyLabel })];
 
     return {
       pages: [
@@ -295,7 +251,7 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
               // Expanded (not collapsed): a collapsed group renders header-only,
               // which reads as "no dropdowns." Matches the Media Card Gallery.
               isCollapsed: false,
-              groupFields: mappingFields
+              groupFields: this._mapping.buildFields()
             }
           ]
         }
@@ -327,31 +283,4 @@ export default class PhillipsHighlightVideoWebPart extends BaseClientSideWebPart
     });
   }
 
-  // A field-mapping dropdown populated from the selected list's columns.
-  private _mappingDropdown(
-    targetProperty: MappingProperty,
-    label: string,
-    columnsReady: boolean
-  ): IPropertyPaneField<unknown> {
-    const columnOptions: IPropertyPaneDropdownOption[] = this._availableColumns.map((c) => ({
-      key: c.internalName,
-      text: c.displayName
-    }));
-
-    let options: IPropertyPaneDropdownOption[];
-    if (!columnsReady) {
-      options = [{ key: '', text: 'Loading columns…' }];
-    } else if (columnOptions.length === 0) {
-      options = [{ key: '', text: '(no columns found on this list)' }];
-    } else {
-      options = columnOptions;
-    }
-
-    return PropertyPaneDropdown(targetProperty, {
-      label,
-      options,
-      selectedKey: (this.properties[targetProperty] as string) || undefined,
-      disabled: !columnsReady || columnOptions.length === 0
-    });
-  }
 }

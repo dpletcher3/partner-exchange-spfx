@@ -1,6 +1,6 @@
 define([], function() {
   return {
-    "PropertyPaneDescription": "Configure the highlight: pick a list and the featured item. Optionally remap which columns supply the title, video, and info.",
+    "PropertyPaneDescription": "Configure the highlight: pick a list and the featured item. The video column accepts a Vimeo or YouTube URL. Optionally remap which columns supply the title, video, and info.",
     "ContentGroupName": "Content",
     "SectionHeaderFieldLabel": "Section header",
     "FieldMappingGroupName": "Advanced — field mapping",
@@ -8,7 +8,7 @@ define([], function() {
     "ListFieldLabel": "List",
     "ItemFieldLabel": "Featured item",
     "TitleFieldLabel": "Title field",
-    "VideoFieldLabel": "Video field",
+    "VideoFieldLabel": "Video field (Vimeo or YouTube URL)",
     "InfoFieldLabel": "Info field"
   }
 });
