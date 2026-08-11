@@ -2,8 +2,9 @@ import * as React from 'react';
 import styles from './PhillipsHighlightVideo.module.scss';
 import { HighlightVideoService } from '../services/HighlightVideoService';
 import { IFieldMapping, IHighlightItem } from '../services/models';
-// Reuse the Media Card Gallery's Vimeo parser — do not re-implement (D035 / spec §3).
-import { detectVideo } from '../../phillipsMediaGallery/services/videoThumbnail';
+// Provider dispatch (Vimeo or YouTube). Thin wrapper over the Media Card
+// Gallery's parser — do not re-implement (D035 / spec §3).
+import { resolveVideoEmbed, IVideoEmbed } from '../services/videoEmbed';
 
 const LOG = '[HighlightVideo]';
 
@@ -23,7 +24,7 @@ type Status = 'configure' | 'loading' | 'error' | 'loaded';
 export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (props) => {
   const [status, setStatus] = React.useState<Status>('configure');
   const [item, setItem] = React.useState<IHighlightItem | undefined>(undefined);
-  const [vimeoId, setVimeoId] = React.useState<string>('');
+  const [embed, setEmbed] = React.useState<IVideoEmbed | undefined>(undefined);
   const [errorMessage, setErrorMessage] = React.useState<string>('');
 
   // Stable id linking the <section> to its header for aria-labelledby (mirrors
@@ -45,20 +46,19 @@ export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (p
     props.service
       .getItem(props.siteUrl, props.listId, props.itemId, props.mapping)
       .then((resolved) => {
-        const v = detectVideo(resolved.videoUrl);
+        const v = resolveVideoEmbed(resolved.videoUrl);
         console.log(`${LOG} resolved item ${resolved.id} "${resolved.title}"; video="${resolved.videoUrl}"; parsed=`, v);
         setItem(resolved);
-        if (v.kind === 'vimeo' && v.id) {
-          const src = `https://player.vimeo.com/video/${v.id}`;
-          console.log(`${LOG} iframe src: ${src}`);
-          setVimeoId(v.id);
+        if (v) {
+          console.log(`${LOG} ${v.provider} iframe src: ${v.embedSrc}`);
+          setEmbed(v);
           setStatus('loaded');
         } else {
-          console.warn(`${LOG} no parseable Vimeo id from "${resolved.videoUrl}" — error state`);
-          setVimeoId('');
+          console.warn(`${LOG} no parseable video id from "${resolved.videoUrl}" — error state`);
+          setEmbed(undefined);
           setErrorMessage(
             resolved.videoUrl
-              ? 'The featured item’s video URL is not a recognized Vimeo link.'
+              ? 'The featured item’s video URL is not a recognized Vimeo or YouTube link.'
               : 'The featured item has no video URL.'
           );
           setStatus('error');
@@ -118,13 +118,13 @@ export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (p
           </div>
         )}
 
-        {status === 'loaded' && item && (
+        {status === 'loaded' && item && embed && (
           <>
             {item.title && <h2 className={styles.title}>{item.title}</h2>}
             <div className={styles.playerFrame}>
               <iframe
                 className={styles.playerIframe}
-                src={`https://player.vimeo.com/video/${vimeoId}`}
+                src={embed.embedSrc}
                 title={item.title || 'Featured video'}
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
@@ -139,7 +139,7 @@ export const PhillipsHighlightVideo: React.FC<IPhillipsHighlightVideoProps> = (p
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open in Vimeo ↗
+                Open in {embed.providerLabel} ↗
               </a>
             </div>
             {item.info && <div className={styles.info}>{item.info}</div>}
